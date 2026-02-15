@@ -384,18 +384,18 @@ export default function AmpersandHome() {
 
       <style jsx>{`
         :root {
-          --bg: #fff6f9;
-          --ink: #1b1b1f;
-          --muted: rgba(27, 27, 31, 0.68);
+  --bg: #fff6f9;
+  --ink: #1b1b1f;
+  --muted: rgba(27, 27, 31, 0.68);
 
-          --brand: #d81b60; /* deep rose */
-          --brand2: #6d28d9; /* plum */
-          --brandSoft: rgba(216, 27, 96, 0.12);
+  --brand: #d81b60; /* deep rose */
+  --brand2: #6d28d9; /* plum */
+  --brandSoft: rgba(216, 27, 96, 0.12);
 
-          --card: rgba(255, 255, 255, 0.9);
-          --border: rgba(27, 27, 31, 0.12);
+  --card: rgba(255, 255, 255, 0.9);
+  --border: rgba(27, 27, 31, 0.12);
 
-          --shadow: 0 18px 50px rgba(27, 27, 31, 0.12);
+  --shadow: 0 18px 50px rgba(27, 27, 31, 0.12);
         }
 
         * {
@@ -563,10 +563,12 @@ export default function AmpersandHome() {
           line-height: 1.06;
         }
         .em {
-          background: linear-gradient(135deg, var(--brand), var(--brand2));
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
+  color: var(--brand); /* fallback if gradient text isn’t supported */
+  background: linear-gradient(135deg, var(--brand), var(--brand2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
         }
         .lead {
           margin: 0;
