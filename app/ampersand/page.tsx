@@ -20,9 +20,9 @@ export default function AmpersandHome() {
       hero: {
         eyebrow: "Menopause awareness & support",
         headlineLine1: "Menopause isn’t an ending.",
-        headlineLine2: "It’s an and.",
+        headlineLine2: "It’s an &.",
         lead:
-          "aMpersand exists to normalize menopause, modernize information, and make support easier to find — at home, at work, and in healthcare.",
+          "aMpersand exists to normalize menopause, modernize information, and make support easier to find — at home, at work, and in healthcare. &stillhere",
         primaryCta: { label: "Get support", href: "#resources" },
         secondaryCta: { label: "For workplaces", href: "#workplace" }
       },
