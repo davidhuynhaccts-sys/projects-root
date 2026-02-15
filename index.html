@@ -1,195 +1,191 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>The Projects Project</title>
-  <meta name="description" content="The Projects Project — A structured idea lab." />
-  <style>
-    :root { color-scheme: light; }
-    * { box-sizing: border-box; }
-    body{
-      margin:0;
-      min-height:100vh;
-      display:grid;
-      place-items:center;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      background:
-        radial-gradient(1200px 700px at 20% 10%, rgba(0,0,0,.06), transparent 55%),
-        radial-gradient(900px 600px at 80% 80%, rgba(0,0,0,.05), transparent 55%),
-        #ffffff;
-      color:#0b0f17;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Projects Project</title>
+<meta name="description" content="The Projects Project — A structured idea lab." />
 
-    .wrap{
-      width:min(900px, calc(100% - 48px));
-      padding: 56px 28px;
-      border-radius: 24px;
-      background: rgba(255,255,255,.72);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 14px 60px rgba(0,0,0,.10);
-      border: 1px solid rgba(0,0,0,.06);
-      position: relative;
-      overflow:hidden;
-    }
+<style>
+:root { color-scheme: dark; }
 
-    /* subtle animated grid */
-    .wrap::before{
-      content:"";
-      position:absolute;
-      inset:-2px;
-      background:
-        linear-gradient(rgba(0,0,0,.05) 1px, transparent 1px) 0 0 / 32px 32px,
-        linear-gradient(90deg, rgba(0,0,0,.05) 1px, transparent 1px) 0 0 / 32px 32px;
-      opacity:.25;
-      mask-image: radial-gradient(closest-side, rgba(0,0,0,.55), transparent 70%);
-      animation: drift 18s linear infinite;
-      pointer-events:none;
-    }
-    @keyframes drift {
-      from { transform: translate3d(0,0,0); }
-      to   { transform: translate3d(-32px,-32px,0); }
-    }
+* { box-sizing: border-box; }
 
-    h1{
-      margin:0 0 16px;
-      font-size: clamp(40px, 6vw, 64px);
-      line-height:1.02;
-      letter-spacing:-0.03em;
-      position:relative;
-      z-index:1;
-    }
+body{
+  margin:0;
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  background:
+    radial-gradient(1200px 700px at 20% 10%, rgba(255,255,255,.04), transparent 60%),
+    radial-gradient(900px 600px at 80% 80%, rgba(255,255,255,.03), transparent 60%),
+    #0d1117;
+  color:#e6edf3;
+}
 
-    .sub{
-      margin:0;
-      font-size: clamp(18px, 2.2vw, 22px);
-      line-height:1.5;
-      color: rgba(11,15,23,.72);
-      position:relative;
-      z-index:1;
-    }
+.wrap{
+  width:min(900px, calc(100% - 48px));
+  padding: 64px 36px;
+  border-radius: 24px;
+  background: rgba(22,27,34,.75);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 20px 80px rgba(0,0,0,.6);
+  border: 1px solid rgba(255,255,255,.06);
+  position: relative;
+  overflow:hidden;
+}
 
-    /* “Idea lab” build effect */
-    .build{
-      display:inline-flex;
-      gap: 10px;
-      margin-left: 6px;
-      vertical-align: baseline;
-      color: rgba(11,15,23,.92);
-      font-weight: 650;
-    }
-    .word{
-      display:inline-flex;
-      gap: 6px;
-      align-items: baseline;
-    }
-    .tile{
-      width: 12px;
-      height: 12px;
-      border-radius: 4px;
-      background: rgba(11,15,23,.10);
-      border: 1px solid rgba(11,15,23,.12);
-      box-shadow: 0 6px 18px rgba(0,0,0,.10);
-      transform: translateY(16px) scale(.85);
-      opacity: 0;
-      animation: place .75s cubic-bezier(.2,.8,.2,1) forwards;
-    }
-    .label{
-      display:inline-block;
-      position: relative;
-      overflow:hidden;
-    }
-    .label::after{
-      content:"";
-      position:absolute;
-      inset: 0 -8px 0 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.95), transparent);
-      transform: translateX(-120%);
-      animation: shimmer 2.2s ease-in-out 1.2s infinite;
-      opacity: .55;
-      pointer-events:none;
-    }
-    @keyframes shimmer {
-      0%   { transform: translateX(-120%); }
-      45%  { transform: translateX(120%); }
-      100% { transform: translateX(120%); }
-    }
-    @keyframes place {
-      to { transform: translateY(0) scale(1); opacity: 1; }
-    }
+/* subtle animated grid */
+.wrap::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  background:
+    linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px) 0 0 / 32px 32px;
+  opacity:.25;
+  mask-image: radial-gradient(closest-side, rgba(0,0,0,.55), transparent 70%);
+  animation: drift 20s linear infinite;
+  pointer-events:none;
+}
 
-    /* stagger tiles */
-    .t1{ animation-delay: .10s; }
-    .t2{ animation-delay: .20s; }
-    .t3{ animation-delay: .30s; }
-    .t4{ animation-delay: .42s; }
-    .t5{ animation-delay: .54s; }
-    .t6{ animation-delay: .66s; }
-    .t7{ animation-delay: .78s; }
-    .t8{ animation-delay: .90s; }
+@keyframes drift {
+  from { transform: translate3d(0,0,0); }
+  to   { transform: translate3d(-32px,-32px,0); }
+}
 
-    .footer{
-      margin-top: 26px;
-      font-size: 14px;
-      color: rgba(11,15,23,.55);
-      position:relative;
-      z-index:1;
-    }
+h1{
+  margin:0 0 20px;
+  font-size: clamp(40px, 6vw, 64px);
+  line-height:1.05;
+  letter-spacing:-0.03em;
+  position:relative;
+  z-index:1;
+}
 
-    .pill{
-      display:inline-flex;
-      gap: 10px;
-      align-items:center;
-      margin-top: 18px;
-      padding: 10px 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(11,15,23,.10);
-      background: rgba(255,255,255,.65);
-      color: rgba(11,15,23,.72);
-      font-size: 13px;
-      position:relative;
-      z-index:1;
-    }
-    .dot{
-      width: 8px; height: 8px; border-radius: 99px;
-      background: rgba(11,15,23,.35);
-      animation: pulse 1.8s ease-in-out infinite;
-    }
-    @keyframes pulse {
-      0%,100% { transform: scale(.85); opacity: .55; }
-      50%     { transform: scale(1.2); opacity: 1; }
-    }
+.sub{
+  margin:0 0 30px;
+  font-size: clamp(18px, 2.2vw, 22px);
+  line-height:1.5;
+  color: rgba(230,237,243,.75);
+  position:relative;
+  z-index:1;
+}
 
-    @media (prefers-reduced-motion: reduce){
-      .wrap::before, .tile, .label::after, .dot { animation: none !important; }
-      .tile { opacity:1; transform:none; }
-    }
-  </style>
+/* idea lab build effect */
+
+.build{
+  display:inline-flex;
+  gap: 12px;
+  margin-left: 6px;
+  font-weight:600;
+}
+
+.word{
+  display:inline-flex;
+  gap:6px;
+  align-items:baseline;
+}
+
+.tile{
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: rgba(88,166,255,.6);
+  transform: translateY(16px);
+  opacity:0;
+  animation: place .7s cubic-bezier(.2,.8,.2,1) forwards;
+}
+
+@keyframes place {
+  to { transform: translateY(0); opacity:1; }
+}
+
+.t1{animation-delay:.1s;}
+.t2{animation-delay:.2s;}
+.t3{animation-delay:.3s;}
+.t4{animation-delay:.4s;}
+.t5{animation-delay:.5s;}
+.t6{animation-delay:.6s;}
+.t7{animation-delay:.7s;}
+.t8{animation-delay:.8s;}
+
+.label{
+  position:relative;
+  overflow:hidden;
+}
+
+/* typing effect */
+
+.typing{
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size:14px;
+  color:#58a6ff;
+  border-right:2px solid #58a6ff;
+  white-space:nowrap;
+  overflow:hidden;
+  width:0;
+  animation: typing 4s steps(50,end) forwards,
+             blink .8s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0 }
+  to { width: 520px }
+}
+
+@keyframes blink {
+  50% { border-color: transparent }
+}
+
+.footer{
+  margin-top: 30px;
+  font-size: 14px;
+  color: rgba(230,237,243,.45);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .wrap::before, .tile, .typing { animation:none !important; }
+  .tile { opacity:1; transform:none; }
+  .typing { width:auto; border:none; }
+}
+
+</style>
 </head>
+
 <body>
-  <main class="wrap" role="main">
+  <main class="wrap">
     <h1>The Projects Project</h1>
 
     <p class="sub">
       A structured
-      <span class="build" aria-label="idea lab building">
+      <span class="build">
         <span class="word">
-          <span class="tile t1"></span><span class="tile t2"></span><span class="tile t3"></span><span class="tile t4"></span>
+          <span class="tile t1"></span>
+          <span class="tile t2"></span>
+          <span class="tile t3"></span>
+          <span class="tile t4"></span>
           <span class="label">idea</span>
         </span>
         <span class="word">
-          <span class="tile t5"></span><span class="tile t6"></span><span class="tile t7"></span><span class="tile t8"></span>
+          <span class="tile t5"></span>
+          <span class="tile t6"></span>
+          <span class="tile t7"></span>
+          <span class="tile t8"></span>
           <span class="label">lab</span>
         </span>
       </span>.
     </p>
 
-    <div class="pill" aria-hidden="true">
-      <span class="dot"></span>
-      <span>Shipping small experiments → learning fast → keeping the good ones</span>
+    <div class="typing">
+      Shipping small experiments → learning fast → keeping the good ones
     </div>
 
-    <div class="footer">Subdomains power this lab: <strong>idea1.projectsproject.com</strong>, <strong>idea2.projectsproject.com</strong>, …</div>
+    <div class="footer">
+      Subdomains power this lab: idea1.projectsproject.com
+    </div>
+
   </main>
 </body>
 </html>
