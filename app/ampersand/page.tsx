@@ -22,7 +22,8 @@ export default function AmpersandHome() {
         headlineLine1: "Menopause isn’t an ending.",
         headlineLine2: "It’s an &.",
         lead:
-          "aMpersand exists to normalize menopause, modernize information, and make support easier to find — at home, at work, and in healthcare. &stillhere",
+          "aMpersand exists to normalize menopause, modernize information, and make support easier to find — at home, at work, and in healthcare.",
+        rally: "&stillhere",
         primaryCta: { label: "Get support", href: "#resources" },
         secondaryCta: { label: "For workplaces", href: "#workplace" }
       },
@@ -176,8 +177,11 @@ export default function AmpersandHome() {
                 <br />
                 {content.hero.headlineLine2}
               </h1>
+<p className="heroLead">
+  {content.hero.lead}{" "}
+  <span className="rally">{content.hero.rally}</span>
+</p>
 
-              <p className="heroLead">{content.hero.lead}</p>
 
               <div className="heroCtas">
                 <a className="btn big" href={content.hero.primaryCta.href}>
@@ -639,6 +643,15 @@ export default function AmpersandHome() {
           font-size: 16px;
           max-width: 75ch;
         }
+
+.rally {
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
         .heroCtas {
           display: flex;
           flex-wrap: wrap;
