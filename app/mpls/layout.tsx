@@ -1,5 +1,5 @@
-"use client";
 
+import Nav from "./Nav";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -481,34 +481,7 @@ button {
 }
 `;
 
-function Nav() {
-  const [aboutOpen, setAboutOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setAboutOpen(false);
-      }
-    }
-
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setAboutOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, []);
+<Nav />
 
   function closeMenu() {
     setAboutOpen(false);
