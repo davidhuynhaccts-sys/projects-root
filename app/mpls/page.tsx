@@ -35,6 +35,54 @@ export default function MplsHomePage() {
       <section className="mpls-section">
         <div className="mpls-container">
           <div className="mpls-section-header">
+            <p className="mpls-eyebrow">Latest from MPLS</p>
+            <h2 className="mpls-section-title">
+              Insights for people who lead complex work
+            </h2>
+            <p className="mpls-section-subtitle">
+              Practical thinking, case studies, and lessons from real delivery
+              environments.
+            </p>
+          </div>
+
+          <div className="mpls-grid-3">
+            <div className="mpls-card">
+              <p className="mpls-kicker">Article</p>
+              <h3>Why Most PMOs Fail — And How the Best Ones Actually Work</h3>
+              <p>
+                The strongest PMOs do not succeed by adding more process. They
+                succeed by improving decision clarity, accountability, and
+                delivery rhythm.
+              </p>
+              <Link href="/insights">Read article →</Link>
+            </div>
+
+            <div className="mpls-card">
+              <p className="mpls-kicker">Case Study</p>
+              <h3>Rescuing a Failing Healthcare Platform Implementation</h3>
+              <p>
+                A look at how leadership, sequencing, and hard decision-making
+                turned around a troubled delivery effort.
+              </p>
+              <Link href="/insights">Read case study →</Link>
+            </div>
+
+            <div className="mpls-card">
+              <p className="mpls-kicker">Interview</p>
+              <h3>What Great Project Leaders Do Differently Under Pressure</h3>
+              <p>
+                An interview on stakeholder alignment, project rescue, and why
+                calm judgment matters more than methodology purity.
+              </p>
+              <Link href="/insights">Read interview →</Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mpls-section mpls-section-alt">
+        <div className="mpls-container">
+          <div className="mpls-section-header">
             <p className="mpls-eyebrow">Mission</p>
 
             <h2 className="mpls-section-title">
@@ -106,7 +154,7 @@ export default function MplsHomePage() {
         </div>
       </section>
 
-      <section className="mpls-section mpls-section-alt">
+      <section className="mpls-section">
         <div className="mpls-container mpls-feature">
           <div className="mpls-feature-panel">
             <div className="mpls-kicker">Featured Insight</div>
@@ -138,7 +186,7 @@ export default function MplsHomePage() {
         </div>
       </section>
 
-      <section className="mpls-section">
+      <section className="mpls-section mpls-section-alt">
         <div className="mpls-container">
           <div className="mpls-section-header">
             <p className="mpls-eyebrow">Philosophy</p>
