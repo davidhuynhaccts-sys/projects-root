@@ -1,5 +1,8 @@
+"use client";
+
 import type { Metadata } from "next";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
 export const metadata: Metadata = {
   title: "MPLS | Modern Project Leadership Society",
@@ -45,6 +48,10 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+button {
+  font: inherit;
 }
 
 .mpls-shell {
@@ -132,12 +139,61 @@ a:hover {
   font-size: 14px;
 }
 
-.mpls-nav > a {
+.mpls-nav > a,
+.mpls-dropdown-trigger {
   color: var(--mpls-primary);
   display: inline-flex;
   align-items: center;
   height: 40px;
   font-weight: 500;
+}
+
+.mpls-dropdown {
+  position: relative;
+}
+
+.mpls-dropdown-trigger {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  gap: 6px;
+}
+
+.mpls-dropdown-trigger:hover {
+  text-decoration: underline;
+}
+
+.mpls-dropdown-caret {
+  font-size: 11px;
+  color: var(--mpls-secondary);
+  transform: translateY(1px);
+}
+
+.mpls-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 220px;
+  background: var(--mpls-surface);
+  border: 1px solid var(--mpls-border);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.10);
+  padding: 8px 0;
+  z-index: 200;
+}
+
+.mpls-dropdown-menu a {
+  display: block;
+  padding: 10px 14px;
+  white-space: nowrap;
+  color: var(--mpls-primary);
+  text-decoration: none;
+}
+
+.mpls-dropdown-menu a:hover {
+  background: #f3f5f8;
+  text-decoration: none;
 }
 
 .mpls-actions {
@@ -415,10 +471,49 @@ a:hover {
   .mpls-footer-grid {
     grid-template-columns: 1fr;
   }
+
+  .mpls-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: auto;
+  }
 }
 `;
 
 function Nav() {
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setAboutOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setAboutOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  function closeMenu() {
+    setAboutOpen(false);
+  }
+
   return (
     <header className="mpls-topbar">
       <div className="mpls-container mpls-topbar-inner">
@@ -434,7 +529,34 @@ function Nav() {
 
         <nav className="mpls-nav">
           <Link href="/">Home</Link>
-          <Link href="/about">About</Link>
+
+          <div className="mpls-dropdown" ref={dropdownRef}>
+            <button
+              type="button"
+              className="mpls-dropdown-trigger"
+              aria-expanded={aboutOpen}
+              aria-haspopup="menu"
+              onClick={() => setAboutOpen((open) => !open)}
+            >
+              About
+              <span className="mpls-dropdown-caret">▾</span>
+            </button>
+
+            {aboutOpen && (
+              <div className="mpls-dropdown-menu" role="menu">
+                <Link href="/about" role="menuitem" onClick={closeMenu}>
+                  About MPLS
+                </Link>
+                <Link href="/governance" role="menuitem" onClick={closeMenu}>
+                  Governance
+                </Link>
+                <Link href="/leadership" role="menuitem" onClick={closeMenu}>
+                  Leadership
+                </Link>
+              </div>
+            )}
+          </div>
+
           <Link href="/membership">Membership</Link>
           <Link href="/insights">Insights</Link>
           <Link href="/awards">Awards</Link>
