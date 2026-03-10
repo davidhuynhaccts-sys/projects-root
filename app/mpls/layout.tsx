@@ -510,16 +510,7 @@ function Nav() {
 
         <nav className="mpls-nav">
           <Link href="/">Home</Link>
-
-          <div className="mpls-dropdown">
-            <span className="mpls-dropdown-trigger">About</span>
-            <div className="mpls-dropdown-menu">
-              <Link href="/about">About MPLS</Link>
-              <Link href="/governance">Governance</Link>
-              <Link href="/leadership">Leadership</Link>
-            </div>
-          </div>
-
+          <Link href="/about">About</Link>
           <Link href="/membership">Membership</Link>
           <Link href="/insights">Insights</Link>
           <Link href="/awards">Awards</Link>
