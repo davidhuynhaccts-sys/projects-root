@@ -87,10 +87,11 @@ a:hover {
 }
 
 .mpls-hero h1 {
-  font-size: clamp(40px, 6vw, 72px);
-  line-height: 1.02;
-  max-width: 10ch;
-  margin-bottom: 20px;
+  font-size: clamp(40px, 5.2vw, 84px);
+  line-height: 0.98;
+  max-width: 13ch;
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
 }
 
 .mpls-lead {
