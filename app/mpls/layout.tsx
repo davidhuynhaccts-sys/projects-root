@@ -400,7 +400,7 @@ function Nav() {
   return (
     <header className="mpls-topbar">
       <div className="mpls-container mpls-topbar-inner">
-        <Link href="/mpls" className="mpls-brand">
+        <Link href="/" className="mpls-brand">
           <span className="mpls-brand-mark">MPLS</span>
           <span className="mpls-brand-copy">
             <div className="mpls-brand-title">Modern Project Leadership Society</div>
@@ -411,20 +411,20 @@ function Nav() {
         </Link>
 
         <nav className="mpls-nav">
-          <Link href="/mpls">Home</Link>
-          <Link href="/mpls/about">About</Link>
-          <Link href="/mpls/membership">Membership</Link>
-          <Link href="/mpls/insights">Insights</Link>
-          <Link href="/mpls/awards">Awards</Link>
-          <Link href="/mpls/events">Events</Link>
-          <Link href="/mpls/partners">Partners</Link>
+          <Link href="/">Home</Link>
+          <Link href="/about">About</Link>
+          <Link href="/membership">Membership</Link>
+          <Link href="/insights">Insights</Link>
+          <Link href="/awards">Awards</Link>
+          <Link href="/events">Events</Link>
+          <Link href="/partners">Partners</Link>
         </nav>
 
         <div className="mpls-actions">
-          <Link href="/mpls/membership" className="mpls-btn mpls-btn-secondary">
+          <Link href="/membership" className="mpls-btn mpls-btn-secondary">
             Join MPLS
           </Link>
-          <Link href="/mpls/awards" className="mpls-btn mpls-btn-primary">
+          <Link href="/awards" className="mpls-btn mpls-btn-primary">
             Nominate a Leader
           </Link>
         </div>
@@ -448,25 +448,27 @@ function Footer() {
         <div>
           <h4>Explore</h4>
           <ul>
-            <li><Link href="/mpls/about">About MPLS</Link></li>
-            <li><Link href="/mpls/membership">Membership</Link></li>
-            <li><Link href="/mpls/insights">Insights</Link></li>
+            <li><Link href="/about">About MPLS</Link></li>
+            <li><Link href="/membership">Membership</Link></li>
+            <li><Link href="/insights">Insights</Link></li>
           </ul>
         </div>
 
         <div>
           <h4>Programs</h4>
           <ul>
-            <li><Link href="/mpls/awards">Awards</Link></li>
-            <li><Link href="/mpls/events">Events</Link></li>
-            <li><Link href="/mpls/partners">Partners</Link></li>
+            <li><Link href="/awards">Awards</Link></li>
+            <li><Link href="/events">Events</Link></li>
+            <li><Link href="/partners">Partners</Link></li>
           </ul>
         </div>
 
         <div>
           <h4>ProjectsProject</h4>
           <ul>
-            <li><Link href="/">Main site</Link></li>
+            <li>
+              <Link href="https://projectsproject.com">Main site</Link>
+            </li>
           </ul>
         </div>
       </div>
