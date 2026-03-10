@@ -1,8 +1,6 @@
-
-import Nav from "./Nav";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import Nav from "./Nav";
 
 export const metadata: Metadata = {
   title: "MPLS | Modern Project Leadership Society",
@@ -50,10 +48,6 @@ a:hover {
   text-decoration: underline;
 }
 
-button {
-  font: inherit;
-}
-
 .mpls-shell {
   min-height: 100vh;
 }
@@ -61,175 +55,6 @@ button {
 .mpls-container {
   width: min(var(--mpls-max), calc(100% - 32px));
   margin: 0 auto;
-}
-
-.mpls-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(246, 247, 249, 0.94);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--mpls-border);
-}
-
-.mpls-topbar-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  min-height: 76px;
-  padding: 10px 0;
-}
-
-.mpls-brand {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  color: var(--mpls-primary);
-  text-decoration: none;
-  min-width: 0;
-  flex-shrink: 0;
-}
-
-.mpls-brand:hover {
-  text-decoration: none;
-}
-
-.mpls-brand-mark {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--mpls-primary);
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  font-family: Arial, Helvetica, sans-serif;
-  background: var(--mpls-surface);
-  flex: 0 0 auto;
-}
-
-.mpls-brand-copy {
-  min-width: 0;
-}
-
-.mpls-brand-title {
-  font-size: 18px;
-  line-height: 1.1;
-  font-weight: 700;
-  color: var(--mpls-primary);
-}
-
-.mpls-brand-subtitle {
-  font-size: 12px;
-  color: var(--mpls-muted);
-  font-family: Arial, Helvetica, sans-serif;
-  margin-top: 3px;
-}
-
-.mpls-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px;
-  align-items: center;
-  justify-content: center;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 14px;
-}
-
-.mpls-nav > a,
-.mpls-dropdown-trigger {
-  color: var(--mpls-primary);
-  display: inline-flex;
-  align-items: center;
-  height: 40px;
-  font-weight: 500;
-}
-
-.mpls-dropdown {
-  position: relative;
-}
-
-.mpls-dropdown-trigger {
-  background: transparent;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-  gap: 6px;
-}
-
-.mpls-dropdown-trigger:hover {
-  text-decoration: underline;
-}
-
-.mpls-dropdown-caret {
-  font-size: 11px;
-  color: var(--mpls-secondary);
-  transform: translateY(1px);
-}
-
-.mpls-dropdown-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  min-width: 220px;
-  background: var(--mpls-surface);
-  border: 1px solid var(--mpls-border);
-  border-radius: 12px;
-  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.10);
-  padding: 8px 0;
-  z-index: 200;
-}
-
-.mpls-dropdown-menu a {
-  display: block;
-  padding: 10px 14px;
-  white-space: nowrap;
-  color: var(--mpls-primary);
-  text-decoration: none;
-}
-
-.mpls-dropdown-menu a:hover {
-  background: #f3f5f8;
-  text-decoration: none;
-}
-
-.mpls-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  flex-shrink: 0;
-}
-
-.mpls-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  padding: 11px 16px;
-  border: 1px solid var(--mpls-primary);
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: 0.2s ease;
-}
-
-.mpls-btn:hover {
-  text-decoration: none;
-  transform: translateY(-1px);
-}
-
-.mpls-btn-primary {
-  background: var(--mpls-primary);
-  color: white;
-}
-
-.mpls-btn-secondary {
-  background: var(--mpls-surface);
-  color: var(--mpls-primary);
 }
 
 .mpls-main {
@@ -343,77 +168,6 @@ button {
   font-size: 17px;
 }
 
-.mpls-list {
-  margin: 0;
-  padding-left: 20px;
-}
-
-.mpls-prose {
-  max-width: 820px;
-}
-
-.mpls-prose h1 {
-  font-size: clamp(34px, 5vw, 56px);
-  margin-bottom: 20px;
-}
-
-.mpls-prose h2 {
-  font-size: 28px;
-  margin-top: 34px;
-  margin-bottom: 12px;
-}
-
-.mpls-highlight {
-  border-left: 4px solid var(--mpls-accent);
-  background: var(--mpls-accent-soft);
-  padding: 18px 20px;
-  border-radius: 12px;
-  color: var(--mpls-primary);
-}
-
-.mpls-award-card {
-  border-color: rgba(199, 154, 59, 0.45);
-  background: linear-gradient(180deg, #fff 0%, #fcfaf4 100%);
-}
-
-.mpls-feature {
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 24px;
-  align-items: stretch;
-}
-
-.mpls-feature-panel {
-  background: var(--mpls-surface);
-  border: 1px solid var(--mpls-border);
-  border-radius: 24px;
-  padding: 28px;
-  box-shadow: var(--mpls-shadow);
-}
-
-.mpls-kicker {
-  font-family: Arial, Helvetica, sans-serif;
-  color: var(--mpls-secondary);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-weight: 700;
-  margin-bottom: 10px;
-}
-
-.mpls-feature-title {
-  font-size: 40px;
-  line-height: 1.1;
-  margin-bottom: 14px;
-  color: var(--mpls-primary);
-}
-
-.mpls-feature-copy {
-  color: var(--mpls-muted);
-  font-size: 18px;
-  line-height: 1.8;
-}
-
 .mpls-footer {
   border-top: 1px solid var(--mpls-border);
   background: #edf1f5;
@@ -453,100 +207,14 @@ button {
 }
 
 @media (max-width: 1080px) {
-  .mpls-topbar-inner {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .mpls-nav,
-  .mpls-actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .mpls-feature,
   .mpls-grid-4,
   .mpls-grid-3,
   .mpls-grid-2,
   .mpls-footer-grid {
     grid-template-columns: 1fr;
   }
-
-  .mpls-dropdown-menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    right: auto;
-  }
 }
 `;
-
-  function closeMenu() {
-    setAboutOpen(false);
-  }
-
-  return (
-    <header className="mpls-topbar">
-      <div className="mpls-container mpls-topbar-inner">
-        <Link href="/" className="mpls-brand">
-          <span className="mpls-brand-mark">MPLS</span>
-          <span className="mpls-brand-copy">
-            <div className="mpls-brand-title">Modern Project Leadership Society</div>
-            <div className="mpls-brand-subtitle">
-              Practical leadership for complex work
-            </div>
-          </span>
-        </Link>
-
-        <nav className="mpls-nav">
-          <Link href="/">Home</Link>
-
-          <div className="mpls-dropdown" ref={dropdownRef}>
-            <button
-              type="button"
-              className="mpls-dropdown-trigger"
-              aria-expanded={aboutOpen}
-              aria-haspopup="menu"
-              onClick={() => setAboutOpen((open) => !open)}
-            >
-              About
-              <span className="mpls-dropdown-caret">▾</span>
-            </button>
-
-            {aboutOpen && (
-              <div className="mpls-dropdown-menu" role="menu">
-                <Link href="/about" role="menuitem" onClick={closeMenu}>
-                  About MPLS
-                </Link>
-                <Link href="/governance" role="menuitem" onClick={closeMenu}>
-                  Governance
-                </Link>
-                <Link href="/leadership" role="menuitem" onClick={closeMenu}>
-                  Leadership
-                </Link>
-              </div>
-            )}
-          </div>
-
-          <Link href="/membership">Membership</Link>
-          <Link href="/insights">Insights</Link>
-          <Link href="/awards">Awards</Link>
-          <Link href="/events">Events</Link>
-          <Link href="/partners">Partners</Link>
-        </nav>
-
-        <div className="mpls-actions">
-          <Link href="/membership" className="mpls-btn mpls-btn-secondary">
-            Join MPLS
-          </Link>
-          <Link href="/awards" className="mpls-btn mpls-btn-primary">
-            Nominate
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-}
 
 function Footer() {
   return (
@@ -582,7 +250,9 @@ function Footer() {
           <h4>ProjectsProject</h4>
           <ul>
             <li>
-              <Link href="https://projectsproject.com">Main site</Link>
+              <Link href="https://projectsproject.com">
+                Main site
+              </Link>
             </li>
           </ul>
         </div>
@@ -600,10 +270,17 @@ export default function MplsLayout({
     <html lang="en">
       <body>
         <style>{styles}</style>
+
         <div className="mpls-shell">
+
           <Nav />
-          <main className="mpls-main">{children}</main>
+
+          <main className="mpls-main">
+            {children}
+          </main>
+
           <Footer />
+
         </div>
       </body>
     </html>
