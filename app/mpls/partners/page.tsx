@@ -1,38 +1,38 @@
-export default function EventsPage() {
+export default function PartnersPage() {
   return (
     <section className="mpls-section">
       <div className="mpls-container mpls-prose">
-        <p className="mpls-eyebrow">Events</p>
-        <h1>Modern Project Leadership Summit</h1>
+        <p className="mpls-eyebrow">Partners</p>
+        <h1>Partner with MPLS</h1>
 
         <p className="mpls-lead">
-          The flagship gathering of the MPLS community — built for experienced
-          practitioners who want serious conversations about leadership,
-          execution, and complex delivery.
+          Organizations may support research, events, and recognition programs
+          while respecting the editorial integrity of the society.
         </p>
 
-        <h2>Keynotes</h2>
+        <h2>Research Sponsorship</h2>
         <p>
-          Thought-provoking perspectives on leadership, execution, accountability,
-          and complexity.
+          Support original research on project leadership, PMO effectiveness, and
+          delivery capability.
         </p>
 
-        <h2>Panels</h2>
+        <h2>Event Sponsorship</h2>
         <p>
-          Experienced leaders discussing the realities of modern project delivery
-          across industries and organizational models.
+          Sponsor the Modern Project Leadership Summit and related practitioner
+          programming.
         </p>
 
-        <h2>Practitioner Discussions</h2>
+        <h2>PMO Spotlight Features</h2>
         <p>
-          Smaller sessions focused on project rescue, PMO design, transformation
-          leadership, delivery culture, and stakeholder alignment.
+          Support a spotlight feature that shares how your organization approaches
+          delivery, leadership, and execution in a way that is useful to the
+          broader community.
         </p>
 
-        <h2>Awards Ceremony</h2>
+        <h2>Sponsorship Philosophy</h2>
         <p>
-          Presentation of the annual MPLS awards recognizing excellence in modern
-          project leadership.
+          MPLS does not publish promotional content disguised as insight.
+          Sponsored programs must still provide real value to practitioners.
         </p>
       </div>
     </section>
