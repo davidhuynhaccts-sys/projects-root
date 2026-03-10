@@ -95,10 +95,10 @@ a:hover {
 }
 
 .mpls-lead {
-  font-size: 21px;
-  line-height: 1.7;
+  font-size: 20px;
+  line-height: 1.75;
   max-width: 760px;
-  color: var(--mpls-muted);
+  color: #5a6270;
   margin: 0;
 }
 
@@ -169,6 +169,77 @@ a:hover {
   font-size: 17px;
 }
 
+.mpls-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.mpls-prose {
+  max-width: 820px;
+}
+
+.mpls-prose h1 {
+  font-size: clamp(34px, 5vw, 56px);
+  margin-bottom: 20px;
+}
+
+.mpls-prose h2 {
+  font-size: 28px;
+  margin-top: 34px;
+  margin-bottom: 12px;
+}
+
+.mpls-highlight {
+  border-left: 4px solid var(--mpls-accent);
+  background: var(--mpls-accent-soft);
+  padding: 18px 20px;
+  border-radius: 12px;
+  color: var(--mpls-primary);
+}
+
+.mpls-award-card {
+  border-color: rgba(199, 154, 59, 0.45);
+  background: linear-gradient(180deg, #fff 0%, #fcfaf4 100%);
+}
+
+.mpls-feature {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.mpls-feature-panel {
+  background: var(--mpls-surface);
+  border: 1px solid var(--mpls-border);
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: var(--mpls-shadow);
+}
+
+.mpls-kicker {
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--mpls-secondary);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.mpls-feature-title {
+  font-size: 32px;
+  line-height: 1.15;
+  margin-bottom: 12px;
+  color: var(--mpls-primary);
+}
+
+.mpls-feature-copy {
+  color: var(--mpls-muted);
+  font-size: 17px;
+  line-height: 1.7;
+}
+
 .mpls-footer {
   border-top: 1px solid var(--mpls-border);
   background: #edf1f5;
@@ -208,6 +279,7 @@ a:hover {
 }
 
 @media (max-width: 1080px) {
+  .mpls-feature,
   .mpls-grid-4,
   .mpls-grid-3,
   .mpls-grid-2,
@@ -251,9 +323,7 @@ function Footer() {
           <h4>ProjectsProject</h4>
           <ul>
             <li>
-              <Link href="https://projectsproject.com">
-                Main site
-              </Link>
+              <Link href="https://projectsproject.com">Main site</Link>
             </li>
           </ul>
         </div>
@@ -271,17 +341,10 @@ export default function MplsLayout({
     <html lang="en">
       <body>
         <style>{styles}</style>
-
         <div className="mpls-shell">
-
           <Nav />
-
-          <main className="mpls-main">
-            {children}
-          </main>
-
+          <main className="mpls-main">{children}</main>
           <Footer />
-
         </div>
       </body>
     </html>
