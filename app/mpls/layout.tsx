@@ -17,9 +17,11 @@ const styles = `
   --mpls-primary: #1f2a44;
   --mpls-secondary: #3e5c76;
   --mpls-accent: #c79a3b;
+  --mpls-accent-soft: #f5edd9;
   --mpls-link: #264d73;
   --mpls-max: 1160px;
   --mpls-radius: 18px;
+  --mpls-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
 }
 
 * { box-sizing: border-box; }
@@ -32,6 +34,10 @@ html, body {
   font-family: Georgia, "Times New Roman", serif;
 }
 
+body {
+  min-height: 100vh;
+}
+
 a {
   color: var(--mpls-link);
   text-decoration: none;
@@ -39,6 +45,10 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+.mpls-shell {
+  min-height: 100vh;
 }
 
 .mpls-container {
@@ -49,63 +59,112 @@ a:hover {
 .mpls-topbar {
   position: sticky;
   top: 0;
-  background: rgba(246,247,249,0.95);
+  z-index: 100;
+  background: rgba(246, 247, 249, 0.94);
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--mpls-border);
 }
 
 .mpls-topbar-inner {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  min-height: 70px;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 76px;
+  padding: 10px 0;
 }
 
 .mpls-brand {
   display: flex;
-  gap: 12px;
   align-items: center;
+  gap: 14px;
   color: var(--mpls-primary);
+  text-decoration: none;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.mpls-brand:hover {
+  text-decoration: none;
 }
 
 .mpls-brand-mark {
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--mpls-primary);
-  border-radius: 10px;
-  display: flex;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid var(--mpls-primary);
+  font-size: 14px;
   font-weight: 700;
+  letter-spacing: 0.12em;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--mpls-surface);
+  flex: 0 0 auto;
+}
+
+.mpls-brand-copy {
+  min-width: 0;
 }
 
 .mpls-brand-title {
   font-size: 18px;
+  line-height: 1.1;
   font-weight: 700;
+  color: var(--mpls-primary);
 }
 
 .mpls-brand-subtitle {
   font-size: 12px;
   color: var(--mpls-muted);
+  font-family: Arial, Helvetica, sans-serif;
+  margin-top: 3px;
 }
 
 .mpls-nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 18px;
   align-items: center;
+  justify-content: center;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 14px;
 }
 
+.mpls-nav > a,
+.mpls-dropdown-trigger {
+  color: var(--mpls-primary);
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  font-weight: 500;
+}
+
 .mpls-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .mpls-btn {
-  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 999px;
+  padding: 11px 16px;
   border: 1px solid var(--mpls-primary);
+  font-family: Arial, Helvetica, sans-serif;
   font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.mpls-btn:hover {
+  text-decoration: none;
+  transform: translateY(-1px);
 }
 
 .mpls-btn-primary {
@@ -114,62 +173,324 @@ a:hover {
 }
 
 .mpls-btn-secondary {
-  background: white;
+  background: var(--mpls-surface);
   color: var(--mpls-primary);
 }
 
-.mpls-dropdown {
-  position: relative;
-}
-
-.mpls-dropdown-menu {
-  position: absolute;
-  top: 26px;
-  left: 0;
-  background: white;
-  border: 1px solid var(--mpls-border);
-  border-radius: 10px;
-  display: none;
-  flex-direction: column;
-  min-width: 180px;
-  padding: 6px 0;
-}
-
-.mpls-dropdown-menu a {
-  padding: 8px 16px;
-}
-
-.mpls-dropdown:hover .mpls-dropdown-menu {
-  display: flex;
-}
-
 .mpls-main {
-  padding: 40px 0;
+  padding-bottom: 48px;
+}
+
+.mpls-hero {
+  padding: 86px 0 70px;
+  background:
+    linear-gradient(180deg, rgba(31, 42, 68, 0.06) 0%, rgba(246, 247, 249, 0) 100%);
+}
+
+.mpls-eyebrow {
+  margin: 0 0 14px;
+  color: var(--mpls-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mpls-hero h1,
+.mpls-section h1,
+.mpls-section h2,
+.mpls-card h3,
+.mpls-card h2 {
+  color: var(--mpls-primary);
+  margin-top: 0;
+}
+
+.mpls-hero h1 {
+  font-size: clamp(40px, 6vw, 72px);
+  line-height: 1.02;
+  max-width: 10ch;
+  margin-bottom: 20px;
+}
+
+.mpls-lead {
+  font-size: 21px;
+  line-height: 1.7;
+  max-width: 760px;
+  color: var(--mpls-muted);
+  margin: 0;
+}
+
+.mpls-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.mpls-section {
+  padding: 56px 0;
+}
+
+.mpls-section-alt {
+  background: #eef1f5;
+  border-top: 1px solid var(--mpls-border);
+  border-bottom: 1px solid var(--mpls-border);
+}
+
+.mpls-section-header {
+  margin-bottom: 26px;
+}
+
+.mpls-section-title {
+  font-size: clamp(30px, 4vw, 44px);
+  margin-bottom: 10px;
+}
+
+.mpls-section-subtitle {
+  color: var(--mpls-muted);
+  font-size: 18px;
+  line-height: 1.7;
+  max-width: 760px;
+}
+
+.mpls-grid-2,
+.mpls-grid-3,
+.mpls-grid-4 {
+  display: grid;
+  gap: 20px;
+}
+
+.mpls-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.mpls-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.mpls-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.mpls-card {
+  background: var(--mpls-surface);
+  border: 1px solid var(--mpls-border);
+  border-radius: var(--mpls-radius);
+  padding: 24px;
+  box-shadow: var(--mpls-shadow);
+}
+
+.mpls-card h2,
+.mpls-card h3 {
+  margin-bottom: 10px;
+  font-size: 26px;
+}
+
+.mpls-card p,
+.mpls-prose p,
+.mpls-prose li,
+.mpls-list li {
+  color: var(--mpls-muted);
+  line-height: 1.75;
+  font-size: 17px;
+}
+
+.mpls-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.mpls-prose {
+  max-width: 820px;
+}
+
+.mpls-prose h1 {
+  font-size: clamp(34px, 5vw, 56px);
+  margin-bottom: 20px;
+}
+
+.mpls-prose h2 {
+  font-size: 28px;
+  margin-top: 34px;
+  margin-bottom: 12px;
+}
+
+.mpls-highlight {
+  border-left: 4px solid var(--mpls-accent);
+  background: var(--mpls-accent-soft);
+  padding: 18px 20px;
+  border-radius: 12px;
+  color: var(--mpls-primary);
+}
+
+.mpls-award-card {
+  border-color: rgba(199, 154, 59, 0.45);
+  background: linear-gradient(180deg, #fff 0%, #fcfaf4 100%);
+}
+
+.mpls-feature {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.mpls-feature-panel {
+  background: var(--mpls-surface);
+  border: 1px solid var(--mpls-border);
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: var(--mpls-shadow);
+}
+
+.mpls-kicker {
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--mpls-secondary);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.mpls-feature-title {
+  font-size: 40px;
+  line-height: 1.1;
+  margin-bottom: 14px;
+  color: var(--mpls-primary);
+}
+
+.mpls-feature-copy {
+  color: var(--mpls-muted);
+  font-size: 18px;
+  line-height: 1.8;
 }
 
 .mpls-footer {
   border-top: 1px solid var(--mpls-border);
-  padding: 40px 0;
-  background: #eef1f5;
+  background: #edf1f5;
+  padding: 42px 0;
+  margin-top: 20px;
 }
 
 .mpls-footer-grid {
   display: grid;
-  grid-template-columns: repeat(4,1fr);
-  gap: 20px;
+  grid-template-columns: 1.3fr 1fr 1fr 1fr;
+  gap: 24px;
 }
 
 .mpls-footer h4 {
-  margin-bottom: 10px;
+  margin: 0 0 14px;
+  color: var(--mpls-primary);
+  font-size: 18px;
+}
+
+.mpls-footer p,
+.mpls-footer li,
+.mpls-footer a {
+  color: var(--mpls-muted);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
 }
 
 .mpls-footer ul {
   list-style: none;
+  margin: 0;
   padding: 0;
 }
 
 .mpls-footer li {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+/* Dropdown */
+.mpls-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+}
+
+.mpls-dropdown::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 12px;
+}
+
+.mpls-dropdown-trigger {
+  cursor: default;
+  user-select: none;
+  gap: 6px;
+}
+
+.mpls-dropdown-trigger::after {
+  content: "▾";
+  font-size: 12px;
+  line-height: 1;
+  color: var(--mpls-secondary);
+  position: relative;
+  top: 1px;
+}
+
+.mpls-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: white;
+  border: 1px solid var(--mpls-border);
+  border-radius: 12px;
+  padding: 8px 0;
+  display: none;
+  min-width: 210px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.10);
+  z-index: 200;
+}
+
+.mpls-dropdown-menu a {
+  display: block;
+  padding: 10px 14px;
+  white-space: nowrap;
+  color: var(--mpls-primary);
+  text-decoration: none;
+}
+
+.mpls-dropdown-menu a:hover {
+  background: #f3f5f8;
+  text-decoration: none;
+}
+
+.mpls-dropdown:hover .mpls-dropdown-menu {
+  display: block;
+}
+
+@media (max-width: 1080px) {
+  .mpls-topbar-inner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .mpls-nav,
+  .mpls-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .mpls-feature,
+  .mpls-grid-4,
+  .mpls-grid-3,
+  .mpls-grid-2,
+  .mpls-footer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mpls-dropdown-menu {
+    position: static;
+    display: block;
+    margin-top: 6px;
+    box-shadow: none;
+    border-radius: 10px;
+  }
+
+  .mpls-dropdown::after {
+    display: none;
+  }
 }
 `;
 
@@ -179,10 +500,8 @@ function Nav() {
       <div className="mpls-container mpls-topbar-inner">
         <Link href="/" className="mpls-brand">
           <span className="mpls-brand-mark">MPLS</span>
-          <span>
-            <div className="mpls-brand-title">
-              Modern Project Leadership Society
-            </div>
+          <span className="mpls-brand-copy">
+            <div className="mpls-brand-title">Modern Project Leadership Society</div>
             <div className="mpls-brand-subtitle">
               Practical leadership for complex work
             </div>
@@ -193,7 +512,7 @@ function Nav() {
           <Link href="/">Home</Link>
 
           <div className="mpls-dropdown">
-            <span>About</span>
+            <span className="mpls-dropdown-trigger">About</span>
             <div className="mpls-dropdown-menu">
               <Link href="/about">About MPLS</Link>
               <Link href="/governance">Governance</Link>
@@ -228,8 +547,8 @@ function Footer() {
         <div>
           <h4>MPLS</h4>
           <p>
-            A professional society advancing the craft of modern project
-            leadership.
+            A professional society dedicated to advancing the craft of modern
+            project leadership.
           </p>
         </div>
 
@@ -255,9 +574,7 @@ function Footer() {
           <h4>ProjectsProject</h4>
           <ul>
             <li>
-              <Link href="https://projectsproject.com">
-                Main Site
-              </Link>
+              <Link href="https://projectsproject.com">Main site</Link>
             </li>
           </ul>
         </div>
@@ -275,14 +592,11 @@ export default function MplsLayout({
     <html lang="en">
       <body>
         <style>{styles}</style>
-
-        <Nav />
-
-        <main className="mpls-main">
-          {children}
-        </main>
-
-        <Footer />
+        <div className="mpls-shell">
+          <Nav />
+          <main className="mpls-main">{children}</main>
+          <Footer />
+        </div>
       </body>
     </html>
   );
