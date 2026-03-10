@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 
 export function middleware(req: NextRequest) {
   const host = (req.headers.get("host") || "").toLowerCase();
-  const hostname = host.split(":")[0]; // strip port if present
+  const hostname = host.split(":")[0];
+  const url = req.nextUrl.clone();
 
-  // ampersand.projectsproject.com -> /ampersand
   if (hostname === "ampersand.projectsproject.com") {
-    const url = req.nextUrl.clone();
     url.pathname = "/ampersand";
+    return NextResponse.rewrite(url);
+  }
+
+  if (hostname === "mpls.projectsproject.com") {
+    url.pathname = `/mpls${url.pathname === "/" ? "" : url.pathname}`;
     return NextResponse.rewrite(url);
   }
 
@@ -15,5 +19,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|favicon.ico).*)"]
+  matcher: ["/((?!_next|favicon.ico).*)"],
 };
