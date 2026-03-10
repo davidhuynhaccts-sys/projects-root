@@ -99,11 +99,21 @@ const navStyles = `
 }
 
 .mpls-dropdown-trigger {
-  background: transparent;
-  border: 0;
+  background: none;
+  border: none;
   padding: 0;
+  margin: 0;
   cursor: pointer;
   gap: 6px;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mpls-primary);
+
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
 }
 
 .mpls-dropdown-caret {
