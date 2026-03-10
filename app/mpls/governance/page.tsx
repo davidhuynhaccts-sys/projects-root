@@ -28,21 +28,21 @@ export default function GovernancePage() {
     {
       name: "David Huynh",
       role: "Board Member",
-      linkedin: "https://www.linkedin.com/in/davidhuynhpmp/",
+      linkedin: "",
       bio: "David Huynh is a project management and delivery leader with extensive experience building enterprise project management offices and improving how organizations execute complex initiatives. His work focuses on practical delivery leadership and modernizing project management practices.",
     },
 
     {
       name: "Frederik Tylim",
       role: "Board Member",
-      linkedin: "https://www.linkedin.com/in/frederiktylim/",
+      linkedin: "",
       bio: "Frederik Tylim is a technology and delivery strategist with experience guiding large transformation initiatives across global organizations. His interests include modern project leadership, organizational execution, and the intersection of strategy and delivery.",
     },
 
     {
       name: "Svetlana Mueller",
       role: "Board Member",
-      linkedin: "https://www.linkedin.com/in/svetmueller/",
+      linkedin: "",
       bio: "Svetlana Mueller is a program and operations leader specializing in cross-functional initiatives and global delivery programs. She brings deep experience in aligning teams, stakeholders, and operational systems to achieve complex outcomes.",
     },
   ];
