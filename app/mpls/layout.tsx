@@ -481,8 +481,6 @@ button {
 }
 `;
 
-<Nav />
-
   function closeMenu() {
     setAboutOpen(false);
   }
