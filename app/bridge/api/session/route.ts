@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRoom, roleForToken, saveRoom, storageReady } from "../../lib/store";
+import { BridgeRoom, getRoom, roleForToken, saveRoom, storageReady } from "../../lib/store";
 
 function token() {
   return crypto.randomUUID().replaceAll("-", "");
@@ -25,13 +25,13 @@ function publicRoom(room: Awaited<ReturnType<typeof getRoom>>, role: "phuc" | "e
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const topic = String(body.topic || "").trim().slice(0, 3000);
-  const createdBy = body.createdBy === "erica" ? "erica" : "phuc";
+  const createdBy: "phuc" | "erica" = body.createdBy === "erica" ? "erica" : "phuc";
   if (topic.length < 3) return NextResponse.json({ error: "Add a topic first." }, { status: 400 });
 
   const id = crypto.randomUUID().split("-")[0];
   const phucToken = token();
   const ericaToken = token();
-  const room = { id, topic, createdBy, createdAt: new Date().toISOString(), phucToken, ericaToken };
+  const room: BridgeRoom = { id, topic, createdBy, createdAt: new Date().toISOString(), phucToken, ericaToken };
   const storage = await saveRoom(room);
   const origin = req.nextUrl.origin;
   return NextResponse.json({
