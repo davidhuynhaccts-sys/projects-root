@@ -15,6 +15,11 @@ export function middleware(req: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
+  if (hostname === "bridge.projectsproject.com") {
+    url.pathname = `/bridge${url.pathname === "/" ? "" : url.pathname}`;
+    return NextResponse.rewrite(url);
+  }
+
   return NextResponse.next();
 }
 
