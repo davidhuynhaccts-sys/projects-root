@@ -37,10 +37,10 @@ type Coaching = {
 };
 
 const starters = [
-  "I want to talk about how our separation should work.",
-  "I want to talk about something that happened today without starting another argument.",
-  "I want us to make a decision about Elly with her stability first.",
-  "I need help explaining what I am feeling and what I need.",
+  "I want to talk about something important.",
+  "I want help putting my thoughts into words.",
+  "I want to understand where we see this differently.",
+  "I want help finding a next step we can both live with.",
 ];
 
 export default function BridgePage() {
