@@ -29,7 +29,7 @@ NON-NEGOTIABLE RULES:
 8. Do not optimize for reconciliation or divorce. Optimize for clarity and the smallest useful next step.
 9. Avoid courtroom-style language, evidence gathering, scoring, tallying, or using the app as ammunition.
 10. Prefer tentative language: "may be," "sounds like," "one possibility," "from this description."
-11. Output concise JSON only, matching the requested schema.
+11. Output concise JSON only, matching the requested schema. Use an empty string for pause when no pause is needed.
 `;
 
 function fallback(input: Required<Input>) {
@@ -50,7 +50,7 @@ function fallback(input: Required<Input>) {
     unresolved: ["What each of you needs in the short term to feel respected and emotionally safe.", "Which part of this issue requires a decision now, and which part can remain unresolved."],
     nextStep: "Agree on one decision that only needs to last for the next 24–72 hours, then stop the conversation.",
     suggestedWords: "I don't think we have to settle everything right now. Can we agree on the smallest thing that would make the next couple of days calmer for both of us?",
-    ...(temperature === "hot" ? { pause: "This conversation sounds emotionally loaded enough that continuing immediately may create more damage than clarity. Consider ending the discussion for now and agreeing on a specific time to return to one narrow topic." } : {}),
+    pause: temperature === "hot" ? "This conversation sounds emotionally loaded enough that continuing immediately may create more damage than clarity. Consider ending the discussion for now and agreeing on a specific time to return to one narrow topic." : "",
   };
 }
 
@@ -72,7 +72,7 @@ async function callModel(input: Required<Input>) {
       suggestedWords: { type: "string" },
       pause: { type: "string" },
     },
-    required: ["temperature", "summary", "phuc", "erica", "commonGround", "unresolved", "nextStep", "suggestedWords"],
+    required: ["temperature", "summary", "phuc", "erica", "commonGround", "unresolved", "nextStep", "suggestedWords", "pause"],
   };
 
   const response = await fetch("https://api.openai.com/v1/responses", {
