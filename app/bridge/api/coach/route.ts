@@ -23,17 +23,21 @@ function gatewayToken() {
   return process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN || process.env.OPENAI_API_KEY || "";
 }
 
+function usingGateway() {
+  return Boolean(process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN);
+}
+
 function gatewayUrl() {
-  return process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN
+  return usingGateway()
     ? "https://ai-gateway.vercel.sh/v1/responses"
     : "https://api.openai.com/v1/responses";
 }
 
 function gatewayModel() {
-  if (process.env.BRIDGE_MODEL) return process.env.BRIDGE_MODEL;
-  return process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN
-    ? "openai/gpt-5.6-sol"
-    : "gpt-5.6";
+  // AI Gateway requires provider/model format. Ignore any older BRIDGE_MODEL value
+  // such as "gpt-5-mini" when the gateway is active.
+  if (usingGateway()) return "openai/gpt-5.6-sol";
+  return process.env.BRIDGE_MODEL || "gpt-5.6";
 }
 
 export async function POST(req: NextRequest) {
