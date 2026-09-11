@@ -29,7 +29,9 @@ NON-NEGOTIABLE RULES:
 8. Do not optimize for reconciliation or divorce. Optimize for clarity and the smallest useful next step.
 9. Avoid courtroom-style language, evidence gathering, scoring, tallying, or using the app as ammunition.
 10. Prefer tentative language: "may be," "sounds like," "one possibility," "from this description."
-11. Output concise JSON only, matching the requested schema. Use an empty string for pause when no pause is needed.
+11. Do not manufacture false symmetry. If the two perspectives are substantively different, name the difference neutrally.
+12. Make the synthesis specific to the current submissions. Avoid generic relationship advice that could apply to any couple.
+13. Output concise JSON only, matching the requested schema. Use an empty string for pause when no pause is needed.
 `;
 
 function fallback(input: Required<Input>) {
@@ -45,17 +47,35 @@ function fallback(input: Required<Input>) {
     phuc: input.phuc ? "Phuc appears to want predictability, clarity, and confidence that decisions will not change with the emotional temperature of the moment." : "Phuc's perspective has not been entered yet.",
     erica: input.erica ? "Erica appears to want her emotional experience to be understood before the conversation becomes a plan, rule, or conclusion." : "Erica's perspective has not been entered yet.",
     commonGround: child
-      ? ["Elly's emotional safety and stability matter more than winning this disagreement.", "Neither of you wants adult conflict to become her burden.", "A workable short-term plan does not require resolving the entire marriage today."]
+      ? ["The child's emotional safety and stability matter more than winning this disagreement.", "Neither of you wants adult conflict to become the child's burden.", "A workable short-term plan does not require resolving the entire relationship today."]
       : ["Both of you want to be understood rather than mischaracterized.", "Neither of you benefits from a conversation that becomes more painful than the original issue.", "You can make one short-term decision without deciding the entire future."],
     unresolved: ["What each of you needs in the short term to feel respected and emotionally safe.", "Which part of this issue requires a decision now, and which part can remain unresolved."],
     nextStep: "Agree on one decision that only needs to last for the next 24–72 hours, then stop the conversation.",
     suggestedWords: "I don't think we have to settle everything right now. Can we agree on the smallest thing that would make the next couple of days calmer for both of us?",
     pause: temperature === "hot" ? "This conversation sounds emotionally loaded enough that continuing immediately may create more damage than clarity. Consider ending the discussion for now and agreeing on a specific time to return to one narrow topic." : "",
+    source: "fallback" as const,
   };
 }
 
+function gatewayToken() {
+  return process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN || process.env.OPENAI_API_KEY || "";
+}
+
+function gatewayUrl() {
+  return process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN
+    ? "https://ai-gateway.vercel.sh/v1/responses"
+    : "https://api.openai.com/v1/responses";
+}
+
+function gatewayModel() {
+  if (process.env.BRIDGE_MODEL) return process.env.BRIDGE_MODEL;
+  return process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN
+    ? "openai/gpt-5.6-sol"
+    : "gpt-5.6";
+}
+
 async function callModel(input: Required<Input>) {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = gatewayToken();
   if (!apiKey) return null;
 
   const schema = {
@@ -75,22 +95,25 @@ async function callModel(input: Required<Input>) {
     required: ["temperature", "summary", "phuc", "erica", "commonGround", "unresolved", "nextStep", "suggestedWords", "pause"],
   };
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
+  const response = await fetch(gatewayUrl(), {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
-      model: process.env.BRIDGE_MODEL || "gpt-5-mini",
+      model: gatewayModel(),
       instructions: `${SYSTEM_RULES}\n${PRIVATE_CONTEXT}`,
       input: `CURRENT TOPIC:\n${input.topic}\n\nPHUC'S CURRENT PERSPECTIVE:\n${input.phuc || "Not provided."}\n\nERICA'S CURRENT PERSPECTIVE:\n${input.erica || "Not provided."}`,
       text: { format: { type: "json_schema", name: "bridge_mediation", strict: true, schema } },
     }),
   });
 
-  if (!response.ok) return null;
+  if (!response.ok) {
+    console.error("Bridge mediation AI error", response.status, await response.text());
+    return null;
+  }
   const data = await response.json();
   const text = data.output_text || data.output?.flatMap((x: any) => x.content || []).find((x: any) => x.type === "output_text")?.text;
   if (!text) return null;
-  return JSON.parse(text);
+  return { ...JSON.parse(text), source: "ai" as const };
 }
 
 export async function POST(req: NextRequest) {
@@ -106,7 +129,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Please enter a topic and at least one perspective." }, { status: 400 });
     }
 
-    const modelResult = await callModel(input).catch(() => null);
+    const modelResult = await callModel(input).catch((error) => {
+      console.error("Bridge mediation AI exception", error);
+      return null;
+    });
     return NextResponse.json(modelResult || fallback(input), {
       headers: { "Cache-Control": "no-store" },
     });
