@@ -170,7 +170,7 @@ export default function BridgePage() {
   const partnerName = room.role === "phuc" ? "Erica" : "Phuc";
 
   return <main className="bridge-shell"><div className="ambient ambient-one" /><div className="ambient ambient-two" />
-    <header className="bridge-header"><div className="brand-mark">&amp;</div><div><div className="eyebrow">ROOM {room.id.toUpperCase()}</div><h1>Bridge</h1></div><span className="mode-badge">{room.result ? "Together mode" : `${myName} mode`}</span></header>
+    <header className="bridge-header"><div className="brand-mark">&amp;</div><div><div className="eyebrow">ROOM {room.id.toUpperCase()}</div><h1>Bridge</h1></div><a className="secondary-button" href="/bridge">+ New issue</a><span className="mode-badge">{room.result ? "Together mode" : `${myName} mode`}</span></header>
 
     <section className="room-topic"><span className="tiny-label">THE SHARED TOPIC</span><h2>{room.topic}</h2><p>Bridge keeps your private drafts separate until each of you chooses what to submit.</p></section>
 
