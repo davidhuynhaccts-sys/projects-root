@@ -1,24 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-function heuristic(text: string) {
-  let softened = text;
-  const swaps: Array<[RegExp, string]> = [
-    [/\byou always\b/gi, "I often experience"],
-    [/\byou never\b/gi, "I don't feel like"],
-    [/\byou make me\b/gi, "I feel"],
-    [/\byou're lying\b/gi, "I'm having trouble reconciling what I'm hearing with what I understood"],
-    [/\bthat's ridiculous\b/gi, "I see that differently"],
-  ];
-  for (const [pattern, replacement] of swaps) softened = softened.replace(pattern, replacement);
-  return {
-    intent: "Make the core concern easier to hear without weakening the point you are trying to make.",
-    flags: text === softened ? ["Your wording is already fairly direct."] : ["A few phrases may land as accusation rather than explanation."],
-    suggested: softened,
-    questions: ["What do you most want the other person to understand?", "Is there a specific request you want to make, or do you mainly want to be understood?"],
-    source: "fallback" as const,
-  };
-}
-
 function gatewayToken() {
   return process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN || process.env.OPENAI_API_KEY || "";
 }
@@ -34,10 +15,17 @@ function gatewayUrl() {
 }
 
 function gatewayModel() {
-  // AI Gateway requires provider/model format. Ignore any older BRIDGE_MODEL value
-  // such as "gpt-5-mini" when the gateway is active.
   if (usingGateway()) return "openai/gpt-5.6-sol";
   return process.env.BRIDGE_MODEL || "gpt-5.6";
+}
+
+function safeGatewayMessage(raw: string) {
+  try {
+    const parsed = JSON.parse(raw);
+    return String(parsed?.error?.message || parsed?.message || parsed?.error || "AI Gateway rejected the request.").slice(0, 500);
+  } catch {
+    return raw.replace(/Bearer\s+\S+/gi, "Bearer [redacted]").slice(0, 500) || "AI Gateway rejected the request.";
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -48,7 +36,12 @@ export async function POST(req: NextRequest) {
   if (text.length < 3) return NextResponse.json({ error: "Write a little more first." }, { status: 400 });
 
   const apiKey = gatewayToken();
-  if (!apiKey) return NextResponse.json(heuristic(text));
+  if (!apiKey) {
+    return NextResponse.json({
+      error: "Bridge AI is not configured on this deployment.",
+      detail: "No AI_GATEWAY_API_KEY, VERCEL_OIDC_TOKEN, or OPENAI_API_KEY is available.",
+    }, { status: 503 });
+  }
 
   try {
     const response = await fetch(gatewayUrl(), {
@@ -70,16 +63,28 @@ export async function POST(req: NextRequest) {
         } } }
       })
     });
+
     if (!response.ok) {
-      console.error("Bridge coach AI error", response.status, await response.text());
-      return NextResponse.json(heuristic(text));
+      const raw = await response.text();
+      const detail = safeGatewayMessage(raw);
+      console.error("Bridge coach AI error", response.status, detail);
+      return NextResponse.json({
+        error: `Bridge AI request failed (${response.status}).`,
+        detail,
+      }, { status: 502 });
     }
+
     const data = await response.json();
     const output = data.output_text || data.output?.flatMap((x: any) => x.content || []).find((x: any) => x.type === "output_text")?.text;
-    const parsed = output ? JSON.parse(output) : null;
-    return NextResponse.json(parsed ? { ...parsed, source: "ai" } : heuristic(text));
+    if (!output) {
+      console.error("Bridge coach AI returned no output text");
+      return NextResponse.json({ error: "Bridge AI returned an empty response." }, { status: 502 });
+    }
+
+    return NextResponse.json({ ...JSON.parse(output), source: "ai" });
   } catch (error) {
-    console.error("Bridge coach AI exception", error);
-    return NextResponse.json(heuristic(text));
+    const detail = error instanceof Error ? error.message : "Unknown AI error";
+    console.error("Bridge coach AI exception", detail);
+    return NextResponse.json({ error: "Bridge AI request failed.", detail: detail.slice(0, 500) }, { status: 502 });
   }
 }
