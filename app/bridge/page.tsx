@@ -36,6 +36,19 @@ type Coaching = {
   questions: string[];
 };
 
+type RecentIssue = {
+  id: string;
+  topic: string;
+  token: string;
+  role: "phuc" | "erica";
+  createdAt: string;
+  meSubmitted: boolean;
+  partnerSubmitted: boolean;
+  complete: boolean;
+};
+
+const RECENT_KEY = "bridge:recent-issues";
+
 const starters = [
   "I want to talk about something important.",
   "I want help putting my thoughts into words.",
@@ -52,11 +65,17 @@ export default function BridgePage() {
   const [draft, setDraft] = useState("");
   const [coaching, setCoaching] = useState<Coaching | null>(null);
   const [partnerUrl, setPartnerUrl] = useState("");
+  const [recentIssues, setRecentIssues] = useState<RecentIssue[]>([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(RECENT_KEY) || "[]");
+      if (Array.isArray(saved)) setRecentIssues(saved.slice(0, 20));
+    } catch {}
+
     const p = new URLSearchParams(window.location.search);
     const id = p.get("room") || "";
     const token = p.get("token") || "";
@@ -68,6 +87,24 @@ export default function BridgePage() {
     const timer = window.setInterval(() => loadRoom(roomId, accessToken, true), 7000);
     return () => window.clearInterval(timer);
   }, [roomId, accessToken, room?.result]);
+
+  function rememberRoom(data: Room, token: string) {
+    const item: RecentIssue = {
+      id: data.id,
+      topic: data.topic,
+      token,
+      role: data.role,
+      createdAt: data.createdAt,
+      meSubmitted: data.meSubmitted,
+      partnerSubmitted: data.partnerSubmitted,
+      complete: Boolean(data.result),
+    };
+    setRecentIssues(current => {
+      const next = [item, ...current.filter(x => x.id !== item.id)].slice(0, 20);
+      try { window.localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }
 
   async function loadRoom(id: string, token: string, quiet = false) {
     try {
@@ -81,6 +118,7 @@ export default function BridgePage() {
       }
       const hadResult = Boolean(room?.result);
       setRoom(data);
+      rememberRoom(data, token);
       if (data.result && !hadResult && quiet) notifyReady();
     } catch (e) {
       if (!quiet) setError(e instanceof Error ? e.message : "Could not open this room.");
@@ -134,7 +172,7 @@ export default function BridgePage() {
       const r = await fetch("/bridge/api/session", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ room: room.id, token: accessToken, action: "submit", text: draft }) });
       if (!r.ok) throw new Error((await r.json()).error || "Could not submit.");
       const data: Room = await r.json();
-      setRoom(data); setCoaching(null); await requestNotifications();
+      setRoom(data); rememberRoom(data, accessToken); setCoaching(null); await requestNotifications();
       if (data.ready && !data.result) await loadRoom(room.id, accessToken, true);
     } catch (e) { setError(e instanceof Error ? e.message : "Could not submit."); }
     finally { setLoading(false); }
@@ -147,6 +185,14 @@ export default function BridgePage() {
   }
 
   function acceptSuggestion() { if (coaching?.suggested) { setDraft(coaching.suggested); setCoaching(null); } }
+
+  function recentStatus(issue: RecentIssue) {
+    if (issue.complete) return "Together complete";
+    if (issue.meSubmitted && !issue.partnerSubmitted) return "Waiting for partner";
+    if (!issue.meSubmitted && issue.partnerSubmitted) return "Your perspective needed";
+    if (issue.meSubmitted && issue.partnerSubmitted) return "Building Together mode";
+    return "In progress";
+  }
 
   if (!room) {
     return <main className="bridge-shell"><div className="ambient ambient-one" /><div className="ambient ambient-two" />
@@ -162,6 +208,11 @@ export default function BridgePage() {
         <div className="action-row"><span className="privacy-note">Your first draft stays private.</span><button className="primary-button" disabled={loading || topic.trim().length < 3}>{loading ? "Opening…" : "Open private room →"}</button></div>
         {error && <p className="error-message">{error}</p>}
       </form>
+      {recentIssues.length > 0 && <section className="mediator-card">
+        <div className="step-row"><div><span className="tiny-label">RECENT ISSUES</span><h3>Pick up where you left off.</h3></div></div>
+        <div>{recentIssues.map(issue => <a key={issue.id} href={`/bridge?room=${encodeURIComponent(issue.id)}&token=${encodeURIComponent(issue.token)}`} className="secondary-button" style={{display:"flex", justifyContent:"space-between", gap:"16px", marginTop:"10px", textDecoration:"none"}}><span>{issue.topic}</span><span>{recentStatus(issue)}</span></a>)}</div>
+        <p className="privacy-note" style={{marginTop:"14px"}}>These private links are remembered in this browser. Opening an older room here will add it to this list.</p>
+      </section>}
       <footer><span>Bridge is a communication aid, not therapy, legal advice, or an emergency service.</span><span>Built for understanding, not evidence.</span></footer>
     </main>;
   }
