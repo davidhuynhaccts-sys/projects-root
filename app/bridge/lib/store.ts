@@ -10,6 +10,7 @@ export type BridgeResult = {
   nextStep: string;
   suggestedWords: string;
   pause?: string;
+  source?: "ai" | "fallback";
 };
 
 export type BridgeRoom = {
