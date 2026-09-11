@@ -15,7 +15,25 @@ function heuristic(text: string) {
     flags: text === softened ? ["Your wording is already fairly direct."] : ["A few phrases may land as accusation rather than explanation."],
     suggested: softened,
     questions: ["What do you most want the other person to understand?", "Is there a specific request you want to make, or do you mainly want to be understood?"],
+    source: "fallback" as const,
   };
+}
+
+function gatewayToken() {
+  return process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN || process.env.OPENAI_API_KEY || "";
+}
+
+function gatewayUrl() {
+  return process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN
+    ? "https://ai-gateway.vercel.sh/v1/responses"
+    : "https://api.openai.com/v1/responses";
+}
+
+function gatewayModel() {
+  if (process.env.BRIDGE_MODEL) return process.env.BRIDGE_MODEL;
+  return process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN
+    ? "openai/gpt-5.6-sol"
+    : "gpt-5.6";
 }
 
 export async function POST(req: NextRequest) {
@@ -25,16 +43,16 @@ export async function POST(req: NextRequest) {
   const role = body.role === "erica" ? "Erica" : "Phuc";
   if (text.length < 3) return NextResponse.json({ error: "Write a little more first." }, { status: 400 });
 
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = gatewayToken();
   if (!apiKey) return NextResponse.json(heuristic(text));
 
   try {
-    const response = await fetch("https://api.openai.com/v1/responses", {
+    const response = await fetch(gatewayUrl(), {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
-        model: process.env.BRIDGE_MODEL || "gpt-5-mini",
-        instructions: `You are Bridge's private writing coach. Help ${role} communicate clearly and reduce avoidable escalation without sanitizing legitimate feelings, impact, boundaries, or disagreement. Never tell the user they are right. Never diagnose or assign motives. Do not reveal private history. Preserve the user's voice. Distinguish observation from interpretation. Prefer first-person experience and specific requests over accusation. Output strict JSON only.`,
+        model: gatewayModel(),
+        instructions: `You are Bridge's private writing coach. Help ${role} communicate clearly and reduce avoidable escalation without sanitizing legitimate feelings, impact, boundaries, or disagreement. First infer the user's actual intent and reflect it back accurately. Never tell the user they are right. Never diagnose or assign motives. Do not reveal private history. Preserve the user's voice rather than making it sound clinical or generic. Distinguish observation from interpretation. Prefer first-person experience and specific requests over accusation. If the original wording is already clear, say so rather than rewriting for the sake of rewriting. Output strict JSON only.`,
         input: `TOPIC:\n${topic}\n\nPRIVATE DRAFT:\n${text}`,
         text: { format: { type: "json_schema", name: "bridge_coaching", strict: true, schema: {
           type: "object", additionalProperties: false,
@@ -48,11 +66,16 @@ export async function POST(req: NextRequest) {
         } } }
       })
     });
-    if (!response.ok) return NextResponse.json(heuristic(text));
+    if (!response.ok) {
+      console.error("Bridge coach AI error", response.status, await response.text());
+      return NextResponse.json(heuristic(text));
+    }
     const data = await response.json();
     const output = data.output_text || data.output?.flatMap((x: any) => x.content || []).find((x: any) => x.type === "output_text")?.text;
-    return NextResponse.json(output ? JSON.parse(output) : heuristic(text));
-  } catch {
+    const parsed = output ? JSON.parse(output) : null;
+    return NextResponse.json(parsed ? { ...parsed, source: "ai" } : heuristic(text));
+  } catch (error) {
+    console.error("Bridge coach AI exception", error);
     return NextResponse.json(heuristic(text));
   }
 }
