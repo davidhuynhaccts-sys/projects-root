@@ -72,7 +72,7 @@ function gatewayUrl() {
 }
 
 function gatewayModel() {
-  if (usingGateway()) return "openai/gpt-5.6-sol";
+  if (usingGateway()) return "anthropic/claude-sonnet-5";
   return process.env.BRIDGE_MODEL || "gpt-5.6";
 }
 
