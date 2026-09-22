@@ -142,3 +142,31 @@ button, input, select { font: inherit; }
   .sort { width: 92px; }
   .task-list { border-radius: 17px; }
 }
+
+.sync-dot { color: #a1a1a6; }
+
+.notification-card {
+  margin-top: 14px;
+  background: rgba(255,255,255,.9);
+  border: 1px solid rgba(0,0,0,.055);
+  border-radius: 18px;
+  padding: 15px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.notification-card > div { min-width: 0; display: grid; gap: 3px; }
+.notification-card .eyebrow { color: #8e8e93; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 650; }
+.notification-card strong { font-size: 14px; }
+.notification-card p { margin: 2px 0 0; color: #8e8e93; font-size: 12px; line-height: 1.35; }
+.notification-card button {
+  flex: none; border: 0; border-radius: 12px; background: #007aff; color: white;
+  padding: 9px 13px; font-weight: 650; cursor: pointer;
+}
+.notification-card button:disabled { opacity: .45; }
+.notification-on {
+  flex: none; color: #248a3d; background: #e9f8ee; border-radius: 999px;
+  padding: 7px 11px; font-size: 12px; font-weight: 700;
+}
+.notification-help { max-width: 180px; color: #8e8e93; font-size: 11px; line-height: 1.3; text-align: right; }

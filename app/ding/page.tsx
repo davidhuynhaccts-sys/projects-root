@@ -1,10 +1,11 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import "./ding.css";
 
 type Category = { id: string; name: string; color: string; createdAt: number };
 type Task = { id: string; text: string; categoryId: string; createdAt: number };
+type DingState = { categories: Category[]; tasks: Task[]; updatedAt?: number };
 
 const DEFAULT_CATEGORIES: Category[] = [
   { id: "work", name: "Work", color: "#007AFF", createdAt: 1 },
@@ -21,6 +22,24 @@ function uid() {
     : Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+function mergeStates(server: DingState, local: DingState | null) {
+  if (!local) return server;
+  const categories = [...server.categories];
+  for (const c of local.categories || []) {
+    if (!categories.some(existing => existing.id === c.id)) categories.push(c);
+  }
+  const taskMap = new Map<string, Task>();
+  for (const t of [...(server.tasks || []), ...(local.tasks || [])]) taskMap.set(t.id, t);
+  return { categories, tasks: [...taskMap.values()], updatedAt: Date.now() };
+}
+
+function base64ToUint8Array(value: string) {
+  const padding = "=".repeat((4 - value.length % 4) % 4);
+  const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(char => char.charCodeAt(0)));
+}
+
 export default function DingPage() {
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -31,28 +50,100 @@ export default function DingPage() {
   const [showCategories, setShowCategories] = useState(false);
   const [newCategory, setNewCategory] = useState("");
   const [undoTask, setUndoTask] = useState<Task | null>(null);
+  const [ready, setReady] = useState(false);
+  const [syncState, setSyncState] = useState<"loading"|"saved"|"offline">("loading");
+  const [pushState, setPushState] = useState<"checking"|"enabled"|"disabled"|"unsupported">("checking");
+  const [pushBusy, setPushBusy] = useState(false);
+  const syncTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    try {
-      const savedTasks = localStorage.getItem("ding:tasks");
-      const savedCategories = localStorage.getItem("ding:categories");
-      if (savedTasks) setTasks(JSON.parse(savedTasks));
-      if (savedCategories) {
-        const parsed = JSON.parse(savedCategories);
-        if (Array.isArray(parsed) && parsed.length) {
-          setCategories(parsed);
-          setCategoryId(parsed[0].id);
+    let cancelled = false;
+    (async () => {
+      let local: DingState | null = null;
+      try {
+        const localTasks = JSON.parse(localStorage.getItem("ding:tasks") || "null");
+        const localCategories = JSON.parse(localStorage.getItem("ding:categories") || "null");
+        if (Array.isArray(localTasks) || Array.isArray(localCategories)) {
+          local = {
+            tasks: Array.isArray(localTasks) ? localTasks : [],
+            categories: Array.isArray(localCategories) && localCategories.length ? localCategories : DEFAULT_CATEGORIES,
+          };
         }
+      } catch {}
+
+      try {
+        const response = await fetch("/ding/api/state", { cache: "no-store" });
+        if (!response.ok) throw new Error("state");
+        const data = await response.json();
+        const merged = mergeStates(data.state, local);
+        if (cancelled) return;
+        setCategories(merged.categories.length ? merged.categories : DEFAULT_CATEGORIES);
+        setTasks(merged.tasks);
+        setCategoryId((merged.categories[0] || DEFAULT_CATEGORIES[0]).id);
+        setSyncState("saved");
+        setReady(true);
+
+        if (local && (!data.exists || local.tasks?.length)) {
+          fetch("/ding/api/state", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(merged),
+          }).catch(() => {});
+        }
+      } catch {
+        if (cancelled) return;
+        if (local) {
+          setCategories(local.categories);
+          setTasks(local.tasks);
+          setCategoryId((local.categories[0] || DEFAULT_CATEGORIES[0]).id);
+        }
+        setSyncState("offline");
+        setReady(true);
       }
-    } catch {}
+
+      if ("serviceWorker" in navigator && "PushManager" in window) {
+        try {
+          const registration = await navigator.serviceWorker.register("/ding-sw.js", { scope: "/ding" });
+          const subscription = await registration.pushManager.getSubscription();
+          if (!cancelled) setPushState(subscription ? "enabled" : "disabled");
+        } catch {
+          if (!cancelled) setPushState("disabled");
+        }
+      } else if (!cancelled) {
+        setPushState("unsupported");
+      }
+    })();
+
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
     localStorage.setItem("ding:tasks", JSON.stringify(tasks));
-  }, [tasks]);
+    localStorage.setItem("ding:categories", JSON.stringify(categories));
+
+    if (syncTimer.current) window.clearTimeout(syncTimer.current);
+    setSyncState("loading");
+    syncTimer.current = window.setTimeout(async () => {
+      try {
+        const response = await fetch("/ding/api/state", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ categories, tasks }),
+        });
+        if (!response.ok) throw new Error("sync");
+        setSyncState("saved");
+      } catch {
+        setSyncState("offline");
+      }
+    }, 300);
+
+    return () => {
+      if (syncTimer.current) window.clearTimeout(syncTimer.current);
+    };
+  }, [categories, tasks, ready]);
 
   useEffect(() => {
-    localStorage.setItem("ding:categories", JSON.stringify(categories));
     if (!categories.some(c => c.id === categoryId) && categories[0]) setCategoryId(categories[0].id);
     if (filter !== "all" && !categories.some(c => c.id === filter)) setFilter("all");
   }, [categories, categoryId, filter]);
@@ -136,6 +227,48 @@ export default function DingPage() {
     return categories.find(c => c.id === id) || categories[0];
   }
 
+  async function enableNotifications() {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      setPushState("unsupported");
+      return;
+    }
+    setPushBusy(true);
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        setPushState("disabled");
+        return;
+      }
+      const registration = await navigator.serviceWorker.register("/ding-sw.js", { scope: "/ding" });
+      await navigator.serviceWorker.ready;
+      const keyResponse = await fetch("/ding/api/push/key", { cache: "no-store" });
+      const { publicKey } = await keyResponse.json();
+      if (!publicKey) throw new Error("No push key");
+
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: base64ToUint8Array(publicKey),
+        });
+      }
+
+      const response = await fetch("/ding/api/push/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(subscription),
+      });
+      if (!response.ok) throw new Error("Subscription failed");
+      setPushState("enabled");
+      await fetch("/ding/api/push/test", { method: "POST" });
+    } catch (error) {
+      console.error(error);
+      setPushState("disabled");
+    } finally {
+      setPushBusy(false);
+    }
+  }
+
   return (
     <main className="ding-shell">
       <section className="ding-app">
@@ -143,7 +276,7 @@ export default function DingPage() {
           <div>
             <div className="ding-mark" aria-hidden>◉</div>
             <h1>Ding</h1>
-            <p>{tasks.length ? `${tasks.length} open` : "You're all clear."}</p>
+            <p>{tasks.length ? `${tasks.length} open` : "You're all clear."} <span className="sync-dot">· {syncState === "saved" ? "saved" : syncState === "offline" ? "offline" : "saving"}</span></p>
           </div>
           <button className="icon-button" onClick={() => setShowCategories(true)} aria-label="Manage categories">•••</button>
         </header>
@@ -169,11 +302,7 @@ export default function DingPage() {
               All <span>{tasks.length}</span>
             </button>
             {visibleCategories.map(c => (
-              <button
-                key={c.id}
-                className={filter === c.id ? "filter active" : "filter"}
-                onClick={() => setFilter(c.id)}
-              >
+              <button key={c.id} className={filter === c.id ? "filter active" : "filter"} onClick={() => setFilter(c.id)}>
                 <i style={{ background: c.color }} />{c.name}<span>{counts.get(c.id)}</span>
               </button>
             ))}
@@ -196,45 +325,47 @@ export default function DingPage() {
             const cat = categoryFor(task.categoryId);
             return (
               <article className="task" key={task.id}>
-                <button className="check" onClick={() => completeTask(task)} aria-label={`Complete ${task.text}`}>
-                  <span />
-                </button>
+                <button className="check" onClick={() => completeTask(task)} aria-label={`Complete ${task.text}`}><span /></button>
                 <div className="task-copy">
                   <div className="task-text">{task.text}</div>
                   <div className="category-label"><i style={{ background: cat.color }} />{cat.name}</div>
                 </div>
-                <button
-                  className="edit-task"
-                  aria-label="Edit task"
-                  onClick={() => {
-                    const next = window.prompt("Edit task", task.text)?.trim();
-                    if (next) setTasks(prev => prev.map(t => t.id === task.id ? { ...t, text: next } : t));
-                  }}
-                >•••</button>
+                <button className="edit-task" aria-label="Edit task" onClick={() => {
+                  const next = window.prompt("Edit task", task.text)?.trim();
+                  if (next) setTasks(prev => prev.map(t => t.id === task.id ? { ...t, text: next } : t));
+                }}>•••</button>
               </article>
             );
           })}
         </section>
 
-        <footer className="ding-footer">
-          <span>Daily Dings</span>
-          <strong>7:00 AM · 2:30 PM</strong>
-        </footer>
+        <section className="notification-card">
+          <div>
+            <span className="eyebrow">Daily Dings</span>
+            <strong>7:00 AM · 2:30 PM</strong>
+            <p>Every open task, delivered as a Ding notification.</p>
+          </div>
+          {pushState === "enabled" ? (
+            <span className="notification-on">On</span>
+          ) : pushState === "unsupported" ? (
+            <span className="notification-help">Add Ding to your Home Screen to enable notifications.</span>
+          ) : (
+            <button onClick={enableNotifications} disabled={pushBusy || pushState === "checking"}>
+              {pushBusy ? "Enabling…" : pushState === "checking" ? "Checking…" : "Enable"}
+            </button>
+          )}
+        </section>
       </section>
 
       {showCategories && (
         <div className="sheet-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setShowCategories(false); }}>
           <section className="sheet" role="dialog" aria-modal="true" aria-label="Manage categories">
             <div className="sheet-handle" />
-            <div className="sheet-title">
-              <h2>Categories</h2>
-              <button onClick={() => setShowCategories(false)}>Done</button>
-            </div>
+            <div className="sheet-title"><h2>Categories</h2><button onClick={() => setShowCategories(false)}>Done</button></div>
             <div className="category-list">
               {categories.map(c => (
                 <div className="category-row" key={c.id}>
-                  <i style={{ background: c.color }} />
-                  <span>{c.name}</span>
+                  <i style={{ background: c.color }} /><span>{c.name}</span>
                   <button onClick={() => renameCategory(c.id)}>Rename</button>
                   <button className="danger" onClick={() => deleteCategory(c.id)}>Delete</button>
                 </div>
@@ -249,12 +380,7 @@ export default function DingPage() {
         </div>
       )}
 
-      {undoTask && (
-        <div className="undo-toast">
-          <span>Done</span>
-          <button onClick={undo}>Undo</button>
-        </div>
-      )}
+      {undoTask && <div className="undo-toast"><span>Done</span><button onClick={undo}>Undo</button></div>}
     </main>
   );
 }
