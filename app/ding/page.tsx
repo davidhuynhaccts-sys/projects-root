@@ -53,12 +53,24 @@ export default function DingPage() {
   const [ready, setReady] = useState(false);
   const [syncState, setSyncState] = useState<"loading"|"saved"|"offline">("loading");
   const [pushState, setPushState] = useState<"checking"|"enabled"|"disabled"|"unsupported">("checking");
-  const [pushBusy, setPushBusy] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);\n  const [authState, setAuthState] = useState<"checking"|"authenticated"|"loggedOut">("checking");\n  const [passcode, setPasscode] = useState("");\n  const [loginError, setLoginError] = useState("");\n  const [loginBusy, setLoginBusy] = useState(false);
   const syncTimer = useRef<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      try {
+        const authResponse = await fetch("/ding/api/auth", { cache: "no-store" });
+        if (!authResponse.ok) {
+          if (!cancelled) setAuthState("loggedOut");
+          return;
+        }
+        if (!cancelled) setAuthState("authenticated");
+      } catch {
+        if (!cancelled) setAuthState("loggedOut");
+        return;
+      }
+
       let local: DingState | null = null;
       try {
         const localTasks = JSON.parse(localStorage.getItem("ding:tasks") || "null");
@@ -227,6 +239,29 @@ export default function DingPage() {
     return categories.find(c => c.id === id) || categories[0];
   }
 
+  async function login(e: FormEvent) {
+    e.preventDefault();
+    if (!passcode.trim()) return;
+    setLoginBusy(true);
+    setLoginError("");
+    try {
+      const response = await fetch("/ding/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passcode }),
+      });
+      if (!response.ok) {
+        setLoginError("That passcode didn't work.");
+        return;
+      }
+      window.location.reload();
+    } catch {
+      setLoginError("Couldn't sign in. Try again.");
+    } finally {
+      setLoginBusy(false);
+    }
+  }
+
   async function enableNotifications() {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       setPushState("unsupported");
@@ -267,6 +302,39 @@ export default function DingPage() {
     } finally {
       setPushBusy(false);
     }
+  }
+
+  if (authState === "checking") {
+    return (
+      <main className="ding-shell login-shell">
+        <div className="login-mark">◉</div>
+      </main>
+    );
+  }
+
+  if (authState === "loggedOut") {
+    return (
+      <main className="ding-shell login-shell">
+        <section className="login-card">
+          <div className="login-brand"><span>◉</span><h1>Ding</h1></div>
+          <p>Your list, kept simple.</p>
+          <form onSubmit={login}>
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={passcode}
+              onChange={e => setPasscode(e.target.value)}
+              placeholder="Passcode"
+              autoFocus
+            />
+            <button disabled={loginBusy || !passcode.trim()}>
+              {loginBusy ? "Opening…" : "Open Ding"}
+            </button>
+          </form>
+          {loginError && <div className="login-error">{loginError}</div>}
+        </section>
+      </main>
+    );
   }
 
   return (
