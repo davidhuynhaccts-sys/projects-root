@@ -197,3 +197,31 @@ button, input, select { font: inherit; }
 }
 .login-card button:disabled { opacity: .4; }
 .login-error { margin-top: 12px; color: #ff3b30; font-size: 13px; text-align: center; }
+
+.edit-sheet { padding-bottom: max(28px, env(safe-area-inset-bottom)); }
+.edit-form { display: grid; gap: 14px; }
+.edit-form label { display: grid; gap: 7px; }
+.edit-form label > span { color: #8e8e93; font-size: 12px; font-weight: 650; }
+.edit-form input,
+.edit-form select {
+  width: 100%;
+  border: 1px solid #e5e5ea;
+  border-radius: 14px;
+  background: white;
+  color: #1d1d1f;
+  padding: 12px 13px;
+  outline: none;
+}
+.edit-form input:focus,
+.edit-form select:focus { border-color: #8cc4ff; box-shadow: 0 0 0 3px rgba(0,122,255,.10); }
+.save-task {
+  margin-top: 4px;
+  border: 0;
+  border-radius: 14px;
+  background: #007aff;
+  color: white;
+  padding: 12px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.save-task:disabled { opacity: .35; }
