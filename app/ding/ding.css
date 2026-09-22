@@ -170,3 +170,30 @@ button, input, select { font: inherit; }
   padding: 7px 11px; font-size: 12px; font-weight: 700;
 }
 .notification-help { max-width: 180px; color: #8e8e93; font-size: 11px; line-height: 1.3; text-align: right; }
+
+.login-shell { display: grid; place-items: center; padding: 24px; }
+.login-mark {
+  width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center;
+  background: #1d1d1f; color: white; animation: loginPulse 1.2s ease-in-out infinite alternate;
+}
+@keyframes loginPulse { from { opacity: .45; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
+.login-card {
+  width: min(390px, 100%); background: rgba(255,255,255,.94); border: 1px solid rgba(0,0,0,.06);
+  border-radius: 26px; padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,.08);
+}
+.login-brand { display: flex; align-items: center; gap: 10px; }
+.login-brand span { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: #1d1d1f; color: white; font-size: 15px; }
+.login-brand h1 { margin: 0; font-size: 32px; letter-spacing: -.04em; }
+.login-card > p { margin: 10px 0 22px; color: #8e8e93; font-size: 14px; }
+.login-card form { display: grid; gap: 10px; }
+.login-card input {
+  width: 100%; border: 1px solid #e5e5ea; border-radius: 14px; padding: 13px 14px; outline: none;
+  background: #fff; font-size: 16px;
+}
+.login-card input:focus { border-color: #8cc4ff; box-shadow: 0 0 0 3px rgba(0,122,255,.10); }
+.login-card button {
+  border: 0; border-radius: 14px; background: #007aff; color: white; padding: 12px 14px;
+  font-weight: 650; cursor: pointer;
+}
+.login-card button:disabled { opacity: .4; }
+.login-error { margin-top: 12px; color: #ff3b30; font-size: 13px; text-align: center; }
