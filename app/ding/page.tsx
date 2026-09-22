@@ -30,7 +30,7 @@ function mergeStates(server: DingState, local: DingState | null) {
   }
   const taskMap = new Map<string, Task>();
   for (const t of [...(server.tasks || []), ...(local.tasks || [])]) taskMap.set(t.id, t);
-  return { categories, tasks: [...taskMap.values()], updatedAt: Date.now() };
+  return { categories, tasks: Array.from(taskMap.values()), updatedAt: Date.now() };
 }
 
 function base64ToUint8Array(value: string) {
