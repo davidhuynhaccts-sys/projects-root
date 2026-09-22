@@ -49,7 +49,7 @@ export default function DingPage() {
   const [sort, setSort] = useState<"newest"|"oldest"|"category">("newest");
   const [showCategories, setShowCategories] = useState(false);
   const [newCategory, setNewCategory] = useState("");
-  const [undoTask, setUndoTask] = useState<Task | null>(null);
+  const [undoTask, setUndoTask] = useState<Task | null>(null);\n  const [editingTask, setEditingTask] = useState<Task | null>(null);\n  const [editText, setEditText] = useState("");\n  const [editCategoryId, setEditCategoryId] = useState("");
   const [ready, setReady] = useState(false);
   const [syncState, setSyncState] = useState<"loading"|"saved"|"offline">("loading");
   const [pushState, setPushState] = useState<"checking"|"enabled"|"disabled"|"unsupported">("checking");
@@ -243,6 +243,25 @@ export default function DingPage() {
     return categories.find(c => c.id === id) || categories[0];
   }
 
+  function openEdit(task: Task) {
+    setEditingTask(task);
+    setEditText(task.text);
+    setEditCategoryId(task.categoryId);
+  }
+
+  function saveEdit(e: FormEvent) {
+    e.preventDefault();
+    if (!editingTask) return;
+    const clean = editText.trim();
+    if (!clean || !editCategoryId) return;
+    setTasks(prev => prev.map(task =>
+      task.id === editingTask.id
+        ? { ...task, text: clean, categoryId: editCategoryId }
+        : task
+    ));
+    setEditingTask(null);
+  }
+
   async function login(e: FormEvent) {
     e.preventDefault();
     if (!passcode.trim()) return;
@@ -402,10 +421,7 @@ export default function DingPage() {
                   <div className="task-text">{task.text}</div>
                   <div className="category-label"><i style={{ background: cat.color }} />{cat.name}</div>
                 </div>
-                <button className="edit-task" aria-label="Edit task" onClick={() => {
-                  const next = window.prompt("Edit task", task.text)?.trim();
-                  if (next) setTasks(prev => prev.map(t => t.id === task.id ? { ...t, text: next } : t));
-                }}>•••</button>
+                <button className="edit-task" aria-label="Edit task" onClick={() => openEdit(task)}>•••</button>
               </article>
             );
           })}
@@ -428,6 +444,31 @@ export default function DingPage() {
           )}
         </section>
       </section>
+
+      {editingTask && (
+        <div className="sheet-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setEditingTask(null); }}>
+          <section className="sheet edit-sheet" role="dialog" aria-modal="true" aria-label="Edit task">
+            <div className="sheet-handle" />
+            <div className="sheet-title">
+              <h2>Edit task</h2>
+              <button onClick={() => setEditingTask(null)}>Cancel</button>
+            </div>
+            <form className="edit-form" onSubmit={saveEdit}>
+              <label>
+                <span>Task</span>
+                <input value={editText} onChange={e => setEditText(e.target.value)} autoFocus />
+              </label>
+              <label>
+                <span>Category</span>
+                <select value={editCategoryId} onChange={e => setEditCategoryId(e.target.value)}>
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </label>
+              <button className="save-task" disabled={!editText.trim()}>Save</button>
+            </form>
+          </section>
+        </div>
+      )}
 
       {showCategories && (
         <div className="sheet-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setShowCategories(false); }}>
