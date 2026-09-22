@@ -249,7 +249,7 @@ export default function DingPage() {
       if (!subscription) {
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: base64ToUint8Array(publicKey),
+          applicationServerKey: base64ToUint8Array(publicKey) as BufferSource,
         });
       }
 

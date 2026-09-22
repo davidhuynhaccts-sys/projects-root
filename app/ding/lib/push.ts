@@ -37,5 +37,5 @@ export async function sendPush(subscription: DingPushSubscription, payload: obje
     publicKey,
     privateKey
   );
-  return webpush.sendNotification(subscription, JSON.stringify(payload));
+  return webpush.sendNotification(subscription as any, JSON.stringify(payload));
 }
