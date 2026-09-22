@@ -1,22 +1,18 @@
 import { NextRequest } from "next/server";
-import {
-  deletePushSubscription,
-  getPushSubscription,
-  savePushSubscription,
-  type DingPushSubscription,
-} from "../../../lib/store";
+import { isAuthorized } from "../../../lib/auth";
+import { deletePushSubscription, getPushSubscription, savePushSubscription, type DingPushSubscription } from "../../../lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!isAuthorized(request)) return Response.json({ error: "Unauthorized" }, { status: 401 });
   const subscription = await getPushSubscription();
-  return Response.json({ enabled: Boolean(subscription) }, {
-    headers: { "Cache-Control": "no-store" },
-  });
+  return Response.json({ enabled: Boolean(subscription) }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: NextRequest) {
+  if (!isAuthorized(request)) return Response.json({ error: "Unauthorized" }, { status: 401 });
   const subscription = (await request.json()) as DingPushSubscription;
   if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
     return Response.json({ error: "Invalid push subscription." }, { status: 400 });
@@ -25,7 +21,8 @@ export async function POST(request: NextRequest) {
   return Response.json({ ok: true });
 }
 
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
+  if (!isAuthorized(request)) return Response.json({ error: "Unauthorized" }, { status: 401 });
   await deletePushSubscription();
   return Response.json({ ok: true });
 }
