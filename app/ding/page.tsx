@@ -53,7 +53,11 @@ export default function DingPage() {
   const [ready, setReady] = useState(false);
   const [syncState, setSyncState] = useState<"loading"|"saved"|"offline">("loading");
   const [pushState, setPushState] = useState<"checking"|"enabled"|"disabled"|"unsupported">("checking");
-  const [pushBusy, setPushBusy] = useState(false);\n  const [authState, setAuthState] = useState<"checking"|"authenticated"|"loggedOut">("checking");\n  const [passcode, setPasscode] = useState("");\n  const [loginError, setLoginError] = useState("");\n  const [loginBusy, setLoginBusy] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [authState, setAuthState] = useState<"checking"|"authenticated"|"loggedOut">("checking");
+  const [passcode, setPasscode] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginBusy, setLoginBusy] = useState(false);
   const syncTimer = useRef<number | null>(null);
 
   useEffect(() => {
