@@ -1,0 +1,10 @@
+{
+  "name": "Ding",
+  "short_name": "Ding",
+  "description": "A tiny list that keeps you moving.",
+  "start_url": "/ding",
+  "scope": "/ding",
+  "display": "standalone",
+  "background_color": "#f5f5f7",
+  "theme_color": "#f5f5f7"
+}
