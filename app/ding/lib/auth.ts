@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import type { NextRequest } from "next/server";
 
-const PASSCODE_HASH = "69386f45cbc86877c2959251ba5ff35bd7865b6b10adb1cbd7ffbab39dccb836";
+const PASSCODE_HASH = "a1fb4e703a9ef1fa4936801721ff285a97ac85330856674412e054892afe6972";
 
 function secretSeed() {
   const secret = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
