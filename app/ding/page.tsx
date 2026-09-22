@@ -49,7 +49,10 @@ export default function DingPage() {
   const [sort, setSort] = useState<"newest"|"oldest"|"category">("newest");
   const [showCategories, setShowCategories] = useState(false);
   const [newCategory, setNewCategory] = useState("");
-  const [undoTask, setUndoTask] = useState<Task | null>(null);\n  const [editingTask, setEditingTask] = useState<Task | null>(null);\n  const [editText, setEditText] = useState("");\n  const [editCategoryId, setEditCategoryId] = useState("");
+  const [undoTask, setUndoTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editText, setEditText] = useState("");
+  const [editCategoryId, setEditCategoryId] = useState("");
   const [ready, setReady] = useState(false);
   const [syncState, setSyncState] = useState<"loading"|"saved"|"offline">("loading");
   const [pushState, setPushState] = useState<"checking"|"enabled"|"disabled"|"unsupported">("checking");
