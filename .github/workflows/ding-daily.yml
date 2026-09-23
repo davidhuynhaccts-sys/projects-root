@@ -2,17 +2,14 @@ name: Ding Daily Notifications
 
 on:
   schedule:
-    # Central Time switches between UTC-5 and UTC-6.
-    # The Ding endpoint accepts only the correct local-time window and de-duplicates sends.
-    - cron: "0 12 * * *"
-    - cron: "0 13 * * *"
-    - cron: "30 19 * * *"
-    - cron: "30 20 * * *"
+    # Check every five minutes. Ding itself compares the current Central time
+    # with the two saved notification times and de-duplicates each daily slot.
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:
   ding:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Ding digest
+      - name: Trigger Ding digest check
         run: curl --fail --silent --show-error --retry 2 https://projectsproject.com/ding/api/digest
