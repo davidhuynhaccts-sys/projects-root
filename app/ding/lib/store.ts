@@ -9,6 +9,10 @@ export type DingPushSubscription = {
   keys: { p256dh: string; auth: string };
 };
 
+export type DingSettings = {
+  notificationTimes: [string, string];
+};
+
 export const DEFAULT_CATEGORIES: DingCategory[] = [
   { id: "work", name: "Work", color: "#007AFF", createdAt: 1 },
   { id: "shopping", name: "Shopping", color: "#34C759", createdAt: 2 },
@@ -25,6 +29,7 @@ function redisClient() {
 
 let memoryState: DingState | null = null;
 let memorySubscription: DingPushSubscription | null = null;
+let memorySettings: DingSettings = { notificationTimes: ["07:00", "14:30"] };
 const memorySent = new Set<string>();
 
 export async function getState() {
@@ -78,4 +83,23 @@ export async function claimDigest(slot: string) {
   if (memorySent.has(slot)) return false;
   memorySent.add(slot);
   return true;
+}
+
+
+export async function getSettings() {
+  const redis = redisClient();
+  if (redis) {
+    return (await redis.get<DingSettings>("ding:settings")) || { notificationTimes: ["07:00", "14:30"] };
+  }
+  return memorySettings;
+}
+
+export async function saveSettings(settings: DingSettings) {
+  const clean: DingSettings = {
+    notificationTimes: settings.notificationTimes,
+  };
+  const redis = redisClient();
+  if (redis) await redis.set("ding:settings", clean);
+  else memorySettings = clean;
+  return clean;
 }
