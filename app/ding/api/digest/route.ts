@@ -1,4 +1,4 @@
-import { claimDigest, deletePushSubscription, getPushSubscription, getState } from "../../lib/store";
+import { claimDigest, deletePushSubscription, getPushSubscription, getSettings, getState } from "../../lib/store";
 import { sendPush } from "../../lib/push";
 
 export const runtime = "nodejs";
@@ -22,17 +22,32 @@ function centralNow() {
   };
 }
 
-function slotForNow() {
-  const now = centralNow();
-  const minutes = now.hour * 60 + now.minute;
-  const morning = 7 * 60;
-  const afternoon = 14 * 60 + 30;
+function formatLabel(value: string) {
+  const [hourText, minute] = value.split(":");
+  const hour = Number(hourText);
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${minute} ${suffix}`;
+}
 
-  if (minutes >= morning && minutes <= morning + 45) {
-    return { id: `${now.date}:0700`, label: "7:00 AM" };
-  }
-  if (minutes >= afternoon && minutes <= afternoon + 45) {
-    return { id: `${now.date}:1430`, label: "2:30 PM" };
+function minutesFromTime(value: string) {
+  const [hour, minute] = value.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+async function slotForNow() {
+  const now = centralNow();
+  const current = now.hour * 60 + now.minute;
+  const settings = await getSettings();
+
+  for (const value of settings.notificationTimes) {
+    const target = minutesFromTime(value);
+    if (current >= target && current <= target + 4) {
+      return {
+        id: `${now.date}:${value.replace(":", "")}`,
+        label: formatLabel(value),
+      };
+    }
   }
   return null;
 }
@@ -54,7 +69,7 @@ function chunks(lines: string[], max = 2800) {
 }
 
 export async function GET(request: Request) {
-  const slot = slotForNow();
+  const slot = await slotForNow();
   if (!slot) return Response.json({ ok: true, skipped: "outside-window" });
 
   const userAgent = request.headers.get("user-agent") || "";
