@@ -57,6 +57,11 @@ export default function DingPage() {
   const [syncState, setSyncState] = useState<"loading"|"saved"|"offline">("loading");
   const [pushState, setPushState] = useState<"checking"|"enabled"|"disabled"|"unsupported">("checking");
   const [pushBusy, setPushBusy] = useState(false);
+  const [notificationTimes, setNotificationTimes] = useState<[string,string]>(["07:00","14:30"]);
+  const [draftTimes, setDraftTimes] = useState<[string,string]>(["07:00","14:30"]);
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+  const [settingsBusy, setSettingsBusy] = useState(false);
+  const [settingsError, setSettingsError] = useState("");
   const [authState, setAuthState] = useState<"checking"|"authenticated"|"loggedOut">("checking");
   const [passcode, setPasscode] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -119,6 +124,17 @@ export default function DingPage() {
         setSyncState("offline");
         setReady(true);
       }
+
+      try {
+        const settingsResponse = await fetch("/ding/api/settings", { cache: "no-store" });
+        if (settingsResponse.ok) {
+          const settings = await settingsResponse.json();
+          if (Array.isArray(settings.notificationTimes) && settings.notificationTimes.length === 2) {
+            setNotificationTimes([settings.notificationTimes[0], settings.notificationTimes[1]]);
+            setDraftTimes([settings.notificationTimes[0], settings.notificationTimes[1]]);
+          }
+        }
+      } catch {}
 
       if ("serviceWorker" in navigator && "PushManager" in window) {
         try {
@@ -288,6 +304,37 @@ export default function DingPage() {
     }
   }
 
+  function formatTime(value: string) {
+    const [hourText, minute] = value.split(":");
+    const hour = Number(hourText);
+    const suffix = hour >= 12 ? "PM" : "AM";
+    return `${hour % 12 || 12}:${minute} ${suffix}`;
+  }
+
+  async function saveNotificationTimes(e: FormEvent) {
+    e.preventDefault();
+    setSettingsBusy(true);
+    setSettingsError("");
+    try {
+      const response = await fetch("/ding/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notificationTimes: draftTimes }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setSettingsError(data.error || "Couldn't save the times.");
+        return;
+      }
+      setNotificationTimes([draftTimes[0], draftTimes[1]]);
+      setShowNotificationSettings(false);
+    } catch {
+      setSettingsError("Couldn't save the times.");
+    } finally {
+      setSettingsBusy(false);
+    }
+  }
+
   async function enableNotifications() {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       setPushState("unsupported");
@@ -433,20 +480,54 @@ export default function DingPage() {
         <section className="notification-card">
           <div>
             <span className="eyebrow">Daily Dings</span>
-            <strong>7:00 AM · 2:30 PM</strong>
+            <strong>{formatTime(notificationTimes[0])} · {formatTime(notificationTimes[1])}</strong>
             <p>Every open task, delivered as a Ding notification.</p>
           </div>
-          {pushState === "enabled" ? (
-            <span className="notification-on">On</span>
-          ) : pushState === "unsupported" ? (
-            <span className="notification-help">Add Ding to your Home Screen to enable notifications.</span>
-          ) : (
-            <button onClick={enableNotifications} disabled={pushBusy || pushState === "checking"}>
-              {pushBusy ? "Enabling…" : pushState === "checking" ? "Checking…" : "Enable"}
-            </button>
-          )}
+          <div className="notification-actions">
+            <button className="time-edit-button" onClick={() => {
+              setDraftTimes([notificationTimes[0], notificationTimes[1]]);
+              setSettingsError("");
+              setShowNotificationSettings(true);
+            }}>Times</button>
+            {pushState === "enabled" ? (
+              <span className="notification-on">On</span>
+            ) : pushState === "unsupported" ? (
+              <span className="notification-help">Add Ding to your Home Screen to enable notifications.</span>
+            ) : (
+              <button onClick={enableNotifications} disabled={pushBusy || pushState === "checking"}>
+                {pushBusy ? "Enabling…" : pushState === "checking" ? "Checking…" : "Enable"}
+              </button>
+            )}
+          </div>
         </section>
       </section>
+
+      {showNotificationSettings && (
+        <div className="sheet-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setShowNotificationSettings(false); }}>
+          <section className="sheet time-sheet" role="dialog" aria-modal="true" aria-label="Notification times">
+            <div className="sheet-handle" />
+            <div className="sheet-title">
+              <h2>Notification times</h2>
+              <button onClick={() => setShowNotificationSettings(false)}>Cancel</button>
+            </div>
+            <form className="time-form" onSubmit={saveNotificationTimes}>
+              <label>
+                <span>First Ding</span>
+                <input type="time" value={draftTimes[0]} onChange={e => setDraftTimes([e.target.value, draftTimes[1]])} />
+              </label>
+              <label>
+                <span>Second Ding</span>
+                <input type="time" value={draftTimes[1]} onChange={e => setDraftTimes([draftTimes[0], e.target.value])} />
+              </label>
+              {settingsError && <div className="settings-error">{settingsError}</div>}
+              <button className="save-task" disabled={settingsBusy || !draftTimes[0] || !draftTimes[1]}>
+                {settingsBusy ? "Saving…" : "Save times"}
+              </button>
+            </form>
+            <p className="time-note">Times use Central Time.</p>
+          </section>
+        </div>
+      )}
 
       {editingTask && (
         <div className="sheet-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setEditingTask(null); }}>
