@@ -225,3 +225,21 @@ button, input, select { font: inherit; }
   cursor: pointer;
 }
 .save-task:disabled { opacity: .35; }
+
+.notification-actions { display:flex; align-items:center; gap:8px; flex:none; }
+.notification-card .time-edit-button { background:#f2f2f7; color:#3a3a3c; }
+.time-sheet { padding-bottom:max(28px, env(safe-area-inset-bottom)); }
+.time-form { display:grid; gap:14px; }
+.time-form label { display:grid; gap:7px; }
+.time-form label > span { color:#8e8e93; font-size:12px; font-weight:650; }
+.time-form input {
+  width:100%;
+  border:1px solid #e5e5ea;
+  border-radius:14px;
+  background:white;
+  color:#1d1d1f;
+  padding:12px 13px;
+  outline:none;
+}
+.settings-error { color:#ff3b30; font-size:13px; }
+.time-note { margin:10px 2px 0; color:#8e8e93; font-size:12px; }
