@@ -42,7 +42,7 @@ async function slotForNow() {
 
   for (const value of settings.notificationTimes) {
     const target = minutesFromTime(value);
-    if (current >= target && current <= target + 4) {
+    if (current >= target && current <= target + 14) {
       return {
         id: `${now.date}:${value.replace(":", "")}`,
         label: formatLabel(value),
