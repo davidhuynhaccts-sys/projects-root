@@ -92,6 +92,11 @@ function Month({
   </section>;
 }
 
+function apiPath(path:string){
+  if (typeof window !== "undefined" && window.location.hostname === "pebbles.projectsproject.com") return `/api/${path}`;
+  return `/pebbles/api/${path}`;
+}
+
 export default function PebblesPage(){
   const [auth,setAuth]=useState<"checking"|"in"|"out">("checking");
   const [passcode,setPasscode]=useState("");
@@ -104,17 +109,17 @@ export default function PebblesPage(){
   const calendarRef=useRef<HTMLDivElement>(null);
 
   async function load(){
-    const a=await fetch("/pebbles/api/auth",{cache:"no-store"});
+    const a=await fetch(apiPath("auth"),{cache:"no-store"});
     if(!a.ok){setAuth("out");return;}
     setAuth("in");
-    const r=await fetch("/pebbles/api/state",{cache:"no-store"});
+    const r=await fetch(apiPath("state"),{cache:"no-store"});
     if(r.ok){const data=await r.json();setState(data.state);setPrediction(data.prediction);}
   }
   useEffect(()=>{load().catch(()=>setAuth("out"));},[]);
 
   async function login(e:FormEvent){
     e.preventDefault(); setLoginError("");
-    const r=await fetch("/pebbles/api/auth",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({passcode})});
+    const r=await fetch(apiPath("auth"),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({passcode})});
     if(!r.ok){setLoginError("That passcode didn't work.");return;}
     setAuth("in"); await load();
   }
@@ -122,7 +127,7 @@ export default function PebblesPage(){
   async function persist(next:PebblesState){
     setState(next); setSaving(true);
     try{
-      const r=await fetch("/pebbles/api/state",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(next)});
+      const r=await fetch(apiPath("state"),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(next)});
       if(r.ok){const data=await r.json();setState(data.state);setPrediction(data.prediction);}
     } finally { setSaving(false); }
   }
