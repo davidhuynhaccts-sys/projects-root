@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   }
   const response = NextResponse.json({ authenticated: true });
   response.cookies.set("pebbles_auth", authCookieValue(), {
-    httpOnly: true, secure: true, sameSite: "lax", path: "/pebbles", maxAge: 60*60*24*365,
+    httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 60*60*24*365,
   });
   return response;
 }
