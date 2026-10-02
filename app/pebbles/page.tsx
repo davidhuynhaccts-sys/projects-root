@@ -106,6 +106,7 @@ export default function PebblesPage(){
   const [selected,setSelected]=useState<string|null>(null);
   const [saving,setSaving]=useState(false);
   const [showSettings,setShowSettings]=useState(false);
+  const [showTopJump,setShowTopJump]=useState(false);
   const calendarRef=useRef<HTMLDivElement>(null);
 
   async function load(){
@@ -175,7 +176,14 @@ export default function PebblesPage(){
   const predictedDays=useMemo(()=>{
     const s=new Set<string>();
     if(prediction?.predictedPeriodStart){
-      for(let i=0;i<5;i++) s.add(addDays(prediction.predictedPeriodStart,i));
+      const cycle=Math.max(15,Math.round(prediction.averageCycleLength||28));
+      const horizon=new Date();
+      horizon.setMonth(horizon.getMonth()+13);
+      let start=prediction.predictedPeriodStart;
+      while(fromIso(start)<=horizon){
+        for(let i=0;i<5;i++) s.add(addDays(start,i));
+        start=addDays(start,cycle);
+      }
     }
     return s;
   },[prediction]);
@@ -184,6 +192,13 @@ export default function PebblesPage(){
     if(auth!=="in"||!state)return;
     setTimeout(()=>document.getElementById(today.slice(0,7))?.scrollIntoView({block:"start"}),50);
   },[auth,!!state]);
+
+  useEffect(()=>{
+    const onScroll=()=>setShowTopJump(window.scrollY>520);
+    onScroll();
+    window.addEventListener("scroll",onScroll,{passive:true});
+    return ()=>window.removeEventListener("scroll",onScroll);
+  },[]);
 
   if(auth==="checking") return <main className="shell loading">Pebbles</main>;
   if(auth==="out") return <main className="loginPage">
@@ -203,7 +218,7 @@ export default function PebblesPage(){
   const selectedPoop=selected?state.poops[selected]:false;
   const poopAgo=prediction.lastPoop?daysBetween(prediction.lastPoop,today):null;
 
-  return <main className="shell">
+  return <main className="shell" id="pebbles-top">
     <header className="topbar">
       <div>
         <div className="brand">Pebbles</div>
@@ -235,6 +250,12 @@ export default function PebblesPage(){
     <div className="calendar" ref={calendarRef}>
       {months.map(m=><Month key={monthKey(m.year,m.month)} {...m} state={state} predictedDays={predictedDays} today={today} selected={selected} onSelect={setSelected}/>)}
     </div>
+
+    {showTopJump&&<button
+      className="topJump"
+      onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}
+      aria-label="Go to next period"
+    ><span>↑</span> Next period</button>}
 
     {selected&&<div className="overlay" onClick={()=>setSelected(null)}>
       <section className="sheet" onClick={e=>e.stopPropagation()}>
