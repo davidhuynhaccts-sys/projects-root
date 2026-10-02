@@ -6,6 +6,16 @@ function dateOnly(value: string) {
 function isoDate(d: Date) {
   return [d.getFullYear(), String(d.getMonth()+1).padStart(2,"0"), String(d.getDate()).padStart(2,"0")].join("-");
 }
+function todayInChicago() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const get = (type: string) => parts.find(p => p.type === type)?.value || "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
 function addDays(value: string, days: number) {
   const d = dateOnly(value); d.setDate(d.getDate()+days); return isoDate(d);
 }
@@ -24,7 +34,7 @@ export function prediction(state: PebblesState) {
   const recent = lengths.slice(-6);
   const avg = recent.length ? recent.reduce((a,b)=>a+b,0)/recent.length : 28;
   const predicted = starts.length ? addDays(starts[starts.length-1], Math.round(avg)) : null;
-  const today = isoDate(new Date());
+  const today = todayInChicago();
   const lastPoop = Object.keys(state.poops).filter(d => state.poops[d]).sort().at(-1) || null;
   const pillDates = Object.keys(state.pills).filter(d => state.pills[d] === "taken").sort();
   const pillDay = state.profile.sprintecStartDate ? Math.max(0, diffDays(state.profile.sprintecStartDate, today) + 1) : null;

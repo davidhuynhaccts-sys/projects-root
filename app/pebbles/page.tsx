@@ -32,6 +32,16 @@ const WEEKDAYS = ["S","M","T","W","T","F","S"];
 function isoDate(d: Date) {
   return [d.getFullYear(), String(d.getMonth()+1).padStart(2,"0"), String(d.getDate()).padStart(2,"0")].join("-");
 }
+function todayInChicago() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const get = (type: string) => parts.find(p => p.type === type)?.value || "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}
 function fromIso(s: string) {
   return new Date(s + "T12:00:00");
 }
@@ -164,7 +174,7 @@ export default function PebblesPage(){
     persist(next); setShowSettings(false);
   }
 
-  const today=prediction?.today || isoDate(new Date());
+  const today=prediction?.today || todayInChicago();
   const months=useMemo(()=>{
     const start=new Date(2026,3,1);
     const end=new Date(); end.setMonth(end.getMonth()+12);
