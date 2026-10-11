@@ -8,7 +8,8 @@ export default function GameClient(){
  const [state,setState]=useState(initial),[muted,setMuted]=useState(false),[best,setBest]=useState(0),[error,setError]=useState('');
  useEffect(()=>{let disposed=false;let handle:GameHandle|undefined;
   try{setBest(Number(localStorage.getItem('superelly-best')||0));}catch{}
-  import('./game').then(({createGame})=>{if(disposed||!mount.current)return;handle=createGame(mount.current,s=>{setState(s);if(s.status==='won'){try{const n=Math.max(s.cookies,Number(localStorage.getItem('superelly-best')||0));localStorage.setItem('superelly-best',String(n));setBest(n);}catch{}}});engine.current=handle;}).catch(()=>setError('The bakery couldn’t load. Check your connection and try again.'));
+  import('./game').then(({createGame})=>{if(disposed||!mount.current)return;handle=createGame(mount.current,s=>{setState(s);if(s.status==='won'){try{const n=Math.max(s.cookies,Number(localStorage.getItem('superelly-best')||0));localStorage.setItem('superelly-best',String(n));setBest(n);}catch{}}});engine.current=handle;
+   if('serviceWorker' in navigator) navigator.serviceWorker.ready.then(reg=>reg.active?.postMessage({type:'CACHE_GAME',urls:performance.getEntriesByType('resource').map(r=>r.name).filter(u=>{const url=new URL(u);return url.origin===location.origin&&url.pathname.startsWith('/_next/static/');})})).catch(()=>{});}).catch(()=>setError('The bakery couldn’t load. Check your connection and try again.'));
   if('serviceWorker' in navigator)navigator.serviceWorker.register('/superelly/sw.js',{scope:'/superelly/'}).catch(()=>{});
   const hidden=()=>{if(document.hidden)engine.current?.pause();};document.addEventListener('visibilitychange',hidden);
   return()=>{disposed=true;handle?.destroy();engine.current=null;document.removeEventListener('visibilitychange',hidden);};
@@ -34,6 +35,6 @@ export default function GameClient(){
  {state.status==='ready'&&<small className="install-tip">iPhone: Share → Add to Home Screen<br/>Keyboard: arrows, Space, F, E, Q</small>}
  </section></div>}
  </div>
- <nav className="touch-controls" aria-label="Game controls"><div className="move-pad">{button('left','◀','Left')}{button('right','▶','Right')}<span>— MOVE —</span></div><div className="action-pad">{button('jump','↑','Jump')}{button('flash','☀','Flashlight')}{button('action','✋','Action')}{button('special','★',state.charge>=100?'Ready!':'Special')}</div></nav>
+ <nav className="touch-controls" aria-label="Game controls"><div className="move-pad">{button('left','◀','Left')}{button('right','▶','Right')}<span>— MOVE —</span></div><div className="action-pad">{button('jump','↑','Jump')}{button('flash','🔦','Flashlight')}{button('action','✋','Action')}{button('special','★',state.charge>=100?'Ready!':'Special')}</div></nav>
  </div></main>
 }
