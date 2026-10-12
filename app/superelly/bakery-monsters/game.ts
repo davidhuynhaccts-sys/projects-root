@@ -1,25 +1,26 @@
 import Phaser from 'phaser';
-import {BakeryModel,emptyControls,WORLD,BOSS_X,MACHINE_X,LEVELS,LevelId,Control,GameSnapshot,GameEvent} from './model';
+import {BakeryModel,emptyControls,WORLD,BOSS_X,MACHINE_X,LEVELS,LevelId,CharacterId,Control,GameSnapshot,GameEvent} from './model';
 import {BakeryAudio,Effect} from './audio';
 export type {Control,GameSnapshot} from './model';
 
 export type GameHandle={input:(key:Control,down:boolean)=>void;start:()=>void;pause:()=>void;resume:()=>void;mute:(v:boolean)=>void;destroy:()=>void};
-export const ASSETS=['elly-idle','elly-run','elly-jump','cartwheel','roll','bridge','yellow','pink','blue','boss','cookie','crate','egg','milk','cheese','room-shop','room-pantry','room-kitchen','room-machine'];
-export function createGame(parent:HTMLElement,onState:(s:GameSnapshot)=>void,level:LevelId=1):GameHandle{
+export const ASSETS=['elly-idle','elly-run','elly-jump','ollie-run','cartwheel','roll','bridge','yellow','pink','blue','boss','cookie','crate','egg','milk','cheese','room-shop','room-pantry','room-kitchen','room-machine'];
+export function createGame(parent:HTMLElement,onState:(s:GameSnapshot)=>void,level:LevelId=1,character:CharacterId='elly'):GameHandle{
  const controls=emptyControls();let scene:BakeryScene|undefined;let destroyed=false;
  const audio=new BakeryAudio(()=>{if(scene){scene.model.state.audioBlocked=true;scene.emit();}});
  const clear=()=>Object.keys(controls).forEach(k=>controls[k as Control]=false);
  class BakeryScene extends Phaser.Scene{
-  model!:BakeryModel;player!:Phaser.GameObjects.Image;shadow!:Phaser.GameObjects.Ellipse;beam!:Phaser.GameObjects.Graphics;aura!:Phaser.GameObjects.Graphics;
+  model!:BakeryModel;player!:Phaser.GameObjects.Image;car!:Phaser.GameObjects.Image;shadow!:Phaser.GameObjects.Ellipse;beam!:Phaser.GameObjects.Graphics;aura!:Phaser.GameObjects.Graphics;
   monsters=new Map<number,Phaser.GameObjects.Image>();bars=new Map<number,Phaser.GameObjects.Graphics>();cookies=new Map<number,Phaser.GameObjects.Image>();shots=new Map<number,Phaser.GameObjects.Image>();crateSprites=new Map<number,Phaser.GameObjects.Image>();snacks=new Map<number,Phaser.GameObjects.Container>();cookieSprites=new Map<number,Phaser.GameObjects.Image>();trails:Phaser.GameObjects.Image[]=[];machine!:Phaser.GameObjects.Container;
-  loaded=false;loadFailed=false;lastEmit=0;lastSound=0;superVisual=0;
+  loaded=false;loadFailed=false;lastEmit=0;lastSound=0;superVisual=0;flashUntil=0;flashX=0;
   constructor(){super('Bakery');scene=this;}
-  init(){this.model=new BakeryModel(this.scale.height,Math.random,level);this.monsters=new Map();this.bars=new Map();this.cookies=new Map();this.shots=new Map();this.crateSprites=new Map();this.snacks=new Map();this.trails=[];this.cookieSprites=new Map();this.loaded=false;this.loadFailed=false;this.lastEmit=0;this.lastSound=0;this.superVisual=0;}
+  init(){this.model=new BakeryModel(this.scale.height,Math.random,level,character);this.monsters=new Map();this.bars=new Map();this.cookies=new Map();this.shots=new Map();this.crateSprites=new Map();this.snacks=new Map();this.trails=[];this.cookieSprites=new Map();this.loaded=false;this.loadFailed=false;this.lastEmit=0;this.lastSound=0;this.superVisual=0;this.flashUntil=0;}
   preload(){for(const key of ASSETS)this.load.image(key,`/superelly/assets/${key}.webp`);this.load.once('loaderror',()=>this.loadFailed=true);}
   create(){
    if(this.loadFailed){this.model.state.status='error';this.model.state.hint='An illustration could not load. Please reload.';this.emit();return;}
    const peanut=this.make.graphics({x:0,y:0});peanut.fillStyle(0xd6a269);peanut.lineStyle(2,0x936039);peanut.fillEllipse(17,14,23,25).strokeEllipse(17,14,23,25);peanut.fillEllipse(17,32,23,25).strokeEllipse(17,32,23,25);peanut.lineStyle(1,0xb9814a);for(let i=8;i<40;i+=6)peanut.lineBetween(10,i,24,i+3);peanut.generateTexture('peanut',35,48);peanut.destroy();
    const h=this.scale.height;
+   const carArt=this.make.graphics({x:0,y:0});carArt.fillStyle(0xf2c744).fillRoundedRect(5,25,140,44,12);carArt.fillStyle(0xe9b72f).fillRoundedRect(36,7,72,38,12);carArt.fillStyle(0xb8e5ed).fillRoundedRect(47,13,25,23,7);carArt.fillStyle(0xb8e5ed).fillRoundedRect(77,13,24,23,7);carArt.fillStyle(0x5a4134).fillCircle(40,68,16).fillCircle(113,68,16);carArt.fillStyle(0xfff4ce).fillCircle(14,46,7);carArt.generateTexture('ollie-car',155,84);carArt.destroy();
    LEVELS[level].rooms.forEach((name,i)=>{this.add.image(i*1100,0,`room-${name}`).setOrigin(0).setDisplaySize(1102,h).setDepth(-20);if(i>0){this.add.rectangle(i*1100,h/2,20,h,0xc79970).setDepth(-10);this.add.rectangle(i*1100+8,h/2,5,h,0xf4d6b0).setDepth(-9);}this.add.text(i*1100+380,Math.max(75,h*.25),LEVELS[level].zones[i],{fontFamily:'Georgia',fontSize:'19px',color:'#754b36',backgroundColor:'#fff4de',padding:{x:15,y:9}}).setOrigin(.5).setDepth(-8);});
    if(level===2||level===3){
     for(let room=0;room<4;room++){
@@ -38,7 +39,7 @@ export function createGame(parent:HTMLElement,onState:(s:GameSnapshot)=>void,lev
    for(const c of this.model.cookies)this.cookies.set(c.id,this.add.image(c.x,c.y,'cookie').setDisplaySize(27,27).setDepth(c.y+70));
    for(const e of this.model.enemies){this.monsters.set(e.id,this.add.image(e.x,e.y,e.kind).setOrigin(.5,1).setDisplaySize(e.boss?(level===2?185:level===3?150:155):83,e.boss?(level===2?180:level===3?140:145):80));this.bars.set(e.id,this.add.graphics());}
    this.shadow=this.add.ellipse(this.model.x,this.model.y,65,12,0x77513a,.24).setDepth(this.model.y-1);
-   this.player=this.add.image(this.model.x,this.model.y,'elly-idle').setOrigin(.5,1).setDisplaySize(116,129);this.beam=this.add.graphics().setDepth(2000);this.aura=this.add.graphics().setDepth(1999);
+   this.player=this.add.image(this.model.x,this.model.y,character==='ollie'?'ollie-run':'elly-idle').setOrigin(.5,1).setDisplaySize(character==='ollie'?120:116,character==='ollie'?135:129);this.car=this.add.image(this.model.x,this.model.y,'ollie-car').setOrigin(.5,.82).setDisplaySize(155,84).setVisible(false);this.beam=this.add.graphics().setDepth(2000);this.aura=this.add.graphics().setDepth(1999);
    for(let i=0;i<4;i++)this.trails.push(this.add.image(0,0,'elly-jump').setVisible(false));
    this.machine=level===1?this.makeMachine(MACHINE_X,this.model.lane(.7)):level===2?this.add.container(MACHINE_X,this.model.lane(.7),[this.add.image(0,-35,'crate').setDisplaySize(110,85),this.add.image(-20,-99,'crate').setDisplaySize(90,70),this.add.text(0,-168,'ORDERS',{fontFamily:'Georgia',fontSize:'18px',color:'#76533f',backgroundColor:'#fff1d4',padding:{x:8,y:7}}).setOrigin(.5)]).setDepth(this.model.lane(.7)):this.add.container(MACHINE_X,this.model.lane(.7),[this.add.text(0,-145,'SPINNY!',{fontFamily:'Georgia',fontSize:'20px',color:'#805b64',backgroundColor:'#fff0d6',padding:{x:10,y:8}}).setOrigin(.5),this.add.image(0,-45,'pink').setDisplaySize(130,120)]).setDepth(this.model.lane(.7));
    this.cameras.main.setBounds(0,0,WORLD,h);this.cameras.main.startFollow(this.player,true,.12,0,-60,0);this.cameras.main.setScroll(0,0);
@@ -47,7 +48,7 @@ export function createGame(parent:HTMLElement,onState:(s:GameSnapshot)=>void,lev
    this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>{clear();this.input.keyboard?.removeAllListeners();});this.loaded=true;this.renderFrame();this.emit();
   }
   makeMachine(x:number,y:number){const parts:Phaser.GameObjects.GameObject[]=[this.add.rectangle(0,-36,84,70,0xb3c8ba).setStrokeStyle(3,0x81654f),this.add.circle(0,-42,23,0xe58480).setStrokeStyle(3,0x97524b),this.add.text(0,-43,'Ⅱ',{fontFamily:'Arial',fontSize:'28px',color:'#fff7df'}).setOrigin(.5),this.add.text(0,-95,'STOP SWITCH',{fontFamily:'Georgia',fontSize:'12px',color:'#75503b',backgroundColor:'#fff4db',padding:{x:8,y:5}}).setOrigin(.5)];return this.add.container(x,y,parts).setDepth(y);}
-  emit(){const m=this.model;if(!m)return;parent.dataset.gameState=JSON.stringify({version:5,level,x:Math.round(m.x),y:Math.round(m.y),jump:Math.round(m.z),health:m.state.health,cookies:m.state.cookies,charge:m.state.charge,status:m.state.status,move:m.acro,superActive:m.state.superActive,bossHealth:m.state.bossHealth,comboHits:m.state.comboHits,comboTotal:m.superTotal,cookieShots:m.cookieShots.length,comboMove:m.state.comboMove,crates:m.crates.map(c=>c.hp),pickups:m.pickups,zone:m.state.zone,enemies:m.enemies.map(e=>({id:e.id,hp:e.hp,x:Math.round(e.x),y:Math.round(e.y-e.z)})),projectiles:m.shots.map(s=>s.food),...audio.diagnostics()});onState({...m.state});}
+  emit(){const m=this.model;if(!m)return;parent.dataset.gameState=JSON.stringify({version:6,level,character,x:Math.round(m.x),y:Math.round(m.y),jump:Math.round(m.z),health:m.state.health,cookies:m.state.cookies,charge:m.state.charge,status:m.state.status,move:m.acro,superActive:m.state.superActive,bossHealth:m.state.bossHealth,comboHits:m.state.comboHits,comboTotal:m.superTotal,cookieShots:m.cookieShots.length,comboMove:m.state.comboMove,crates:m.crates.map(c=>c.hp),pickups:m.pickups,zone:m.state.zone,enemies:m.enemies.map(e=>({id:e.id,hp:e.hp,x:Math.round(e.x),y:Math.round(e.y-e.z)})),projectiles:m.shots.map(s=>s.food),...audio.diagnostics()});onState({...m.state});}
   begin(){clear();this.model.start();audio.playMusic();this.emit();}
   pauseGame(){if(this.model.state.status!=='playing')return;this.model.pause();clear();this.tweens.pauseAll();audio.pause();this.emit();}
   resumeGame(){if(this.model.state.status!=='paused')return;this.model.resume();clear();this.tweens.resumeAll();audio.playMusic();this.emit();}
@@ -59,7 +60,9 @@ export function createGame(parent:HTMLElement,onState:(s:GameSnapshot)=>void,lev
    if(e.type==='heal')this.comic('+1 HEART!',e.x,e.y-60,'#ffd1db',700);
    if(e.type==='hit'){this.spark(e.x,e.y,0xffdc98,9);const sprite=this.monsters.get(e.id!);sprite?.setTint(0xffd7b5);}
    if(e.type==='hurt'){this.spark(e.x,e.y,0xf1a7a0,10);this.comic('OOF!',e.x,e.y-70,'#ffc8bc',650);}
-   if(e.type==='acro')this.comic(e.text!,e.x,e.y,'#bde8f0');
+  if(e.type==='acro')this.comic(e.text!,e.x,e.y,'#bde8f0');
+   if(e.type==='cry'){this.comic(e.text!,e.x,e.y,'#bde8f0',850);for(let i=0;i<5;i++){const tear=this.add.ellipse(e.x+Phaser.Math.Between(-22,22),e.y+Phaser.Math.Between(0,20),8,13,0x82d0f1).setDepth(2400);this.tweens.add({targets:tear,y:tear.y+42,alpha:0,duration:650,onComplete:()=>tear.destroy()});}}
+   if(e.type==='flash'){this.flashUntil=this.model.time+190;this.flashX=e.x;this.spark(this.model.x+this.model.facing*40,this.model.y-48,0xfff3ab,7);}
    if(e.type==='warning'){this.comic(e.text!,e.x,e.y,e.food==='egg'?'#ffe8ae':'#c8e8f8',1400);this.spark(e.x,e.y+50,0xffefb4,5);}
    if(e.type==='throw')this.spark(e.x,e.y,0xffeac4,5);
    if(e.type==='special'){this.comic(e.text!,e.x,e.y-65,'#f9daff',1400);this.spark(e.x,e.y,0xffef93,18);}
@@ -67,11 +70,12 @@ export function createGame(parent:HTMLElement,onState:(s:GameSnapshot)=>void,lev
    if(e.type==='defeat'){this.comic(e.text!,e.x,e.y-55,'#e0f0c5',850);const sprite=this.monsters.get(e.id!);if(sprite)this.tweens.add({targets:sprite,x:sprite.x+(sprite.x>=this.model.x?90:-90),y:sprite.y+40,angle:120,alpha:0,duration:700,ease:'Cubic.easeOut',onComplete:()=>sprite.destroy()});this.bars.get(e.id!)?.clear();}
    if(e.type==='win'){for(let i=0;i<5;i++)this.spark(this.model.x+Phaser.Math.Between(-140,140),this.model.y-Phaser.Math.Between(30,220),[0xffd797,0xbde4d3,0xd9b6ea][i%3],12);audio.stopMusic();}
   }
-  renderFrame(){const m=this.model,now=m.time,acro=now<m.acroUntil?m.acro:null;let texture=acro|| (m.z>0?'elly-jump':m.moving&&Math.floor(now/140)%2?'elly-run':'elly-idle');
-   if(m.state.superActive){const age=now-m.superStart;texture=age<650||age>3250?'elly-jump':'cartwheel';}
-   this.player.setTexture(texture).setPosition(m.x,m.y-m.z).setFlipX(m.facing<0).setDepth(m.y+1);this.player.setDisplaySize(acro==='roll'?96:acro==='bridge'?140:116,acro==='roll'?96:acro==='bridge'?88:129);this.player.setOrigin(.5,acro==='roll'?.5:1);if(acro==='roll')this.player.y-=45;
+  renderFrame(){const m=this.model,now=m.time,acro=now<m.acroUntil?m.acro:null;let texture=character==='ollie'?'ollie-run':acro|| (m.z>0?'elly-jump':m.moving&&Math.floor(now/140)%2?'elly-run':'elly-idle');
+   if(m.state.superActive&&character==='elly'){const age=now-m.superStart;texture=age<650||age>3250?'elly-jump':'cartwheel';}
+   this.player.setVisible(!(m.state.superActive&&character==='ollie')).setTexture(texture).setPosition(m.x,m.y-m.z).setFlipX(m.facing<0).setDepth(m.y+1);this.player.setDisplaySize(character==='ollie'?120:acro==='roll'?96:acro==='bridge'?140:116,character==='ollie'?135:acro==='roll'?96:acro==='bridge'?88:129);this.player.setOrigin(.5,acro==='roll'?.5:1);if(acro==='roll')this.player.y-=45;
    const p=(now-m.acroStart)/700;this.player.angle=acro==='roll'?p*360*m.facing:acro==='cartwheel'?Math.sin(p*Math.PI*2)*24*m.facing:0;
-   if(m.state.superActive){const age=now-m.superStart,entry=Math.min(1,age/750),exit=Math.max(0,Math.min(1,(age-3250)/750)),spin=(age-750)/95;
+   this.car.setVisible(m.state.superActive&&character==='ollie');if(this.car.visible)this.car.setPosition(m.x,m.y-7).setFlipX(m.facing<0).setAngle(Math.sin(now/35)*3).setDepth(m.y+2);
+   if(m.state.superActive&&character==='elly'){const age=now-m.superStart,entry=Math.min(1,age/750),exit=Math.max(0,Math.min(1,(age-3250)/750)),spin=(age-750)/95;
     // Plant hands, hold the inverted split while the legs helicopter, then step through.
     const angle=age<750?-180*entry:age<3250?-180:-180-180*exit;
     this.player.setOrigin(.5,1).setDisplaySize(116,129).setPosition(m.superAnchor-65*m.facing,m.y-(age<750?Math.sin(entry*Math.PI/2)*120:120*(1-exit))).setAngle(angle*m.facing);
@@ -80,6 +84,7 @@ export function createGame(parent:HTMLElement,onState:(s:GameSnapshot)=>void,lev
    for(let i=0;i<this.trails.length;i++){const ghost=this.trails[i];ghost.setVisible(m.state.superActive&&now-m.superStart>=750&&now-m.superStart<3250);if(ghost.visible)ghost.setTexture('cartwheel').setOrigin(.5,1).setDisplaySize(116,129).setPosition(m.superAnchor-65*m.facing,m.y-120).setAngle(-180*m.facing+i*9).setAlpha(.08).setTint(0xd8b6fa).setDepth(m.y);}
    this.player.setAlpha(now<m.invulnerable&&!m.state.superActive?(Math.floor(now/100)%2?.55:1):1);if(m.state.superActive)this.player.setTint(0xffefaa);else this.player.clearTint();
    this.shadow.setPosition(m.x,m.y+1).setDepth(m.y-1).setScale(Math.max(.4,1-m.z/230));this.beam.clear();this.aura.clear();
+   if(character==='ollie'&&now<this.flashUntil){const sx=m.x+m.facing*30,sy=m.y-m.z-56,ex=this.flashX;this.beam.fillStyle(0xfff4ad,.38).fillTriangle(sx,sy-10,ex,sy-32,ex,sy+32);this.beam.lineStyle(3,0xfff7d0,.82).lineBetween(sx,sy,ex,sy);}
    const liveCookies=new Set(m.cookieShots.map(c=>c.id));for(const [id,sprite] of Array.from(this.cookieSprites.entries()))if(!liveCookies.has(id)){sprite.destroy();this.cookieSprites.delete(id);}for(const c of m.cookieShots){let sprite=this.cookieSprites.get(c.id);if(!sprite){sprite=this.add.image(c.x,c.y,'cookie').setDisplaySize(30,30).setDepth(2200);this.cookieSprites.set(c.id,sprite);}sprite.setPosition(c.x,c.y).setRotation(c.age*12);}
    for(const e of m.enemies){const image=this.monsters.get(e.id)!;if(e.hp<=0||!image.active)continue;image.setPosition(e.x,e.y-e.z).setDepth(e.y).setFlipX(e.x<m.x);image.angle=now<e.stunnedUntil?Math.sin((now-e.hitAt)/200)*55*(e.knockX>=0?1:-1):0;if(now-e.hitAt>170)image.clearTint();const bar=this.bars.get(e.id)!;bar.clear();if(e.hp<e.max){bar.fillStyle(0xfff3da,.9).fillRoundedRect(e.x-26,image.y-image.displayHeight-10,52,6,3);bar.fillStyle(0x8caf78).fillRoundedRect(e.x-25,image.y-image.displayHeight-9,50*e.hp/e.max,4,2);bar.setDepth(e.y+2);}}
    for(const c of m.cookies){const image=this.cookies.get(c.id)!;if(c.taken){image.setVisible(false);continue;}image.y=c.y+Math.sin(now/330+c.id)*4;}

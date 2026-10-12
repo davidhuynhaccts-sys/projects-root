@@ -1,6 +1,6 @@
-const CACHE='superelly-bakery-v7';
+const CACHE='superelly-bakery-v8';
 const BASE='/superelly';
-const illustrations=['elly-idle','elly-run','elly-jump','cartwheel','roll','bridge','yellow','pink','blue','boss','cookie','crate','egg','milk','cheese','room-shop','room-pantry','room-kitchen','room-machine'];
+const illustrations=['elly-idle','elly-run','elly-jump','ollie-run','cartwheel','roll','bridge','yellow','pink','blue','boss','cookie','crate','egg','milk','cheese','room-shop','room-pantry','room-kitchen','room-machine'];
 const sounds=['cookie','jump','hit','acro','special','hurt','throw','learn','win','flash'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll([BASE,BASE+'/bakery-monsters',BASE+'/manifest.webmanifest',...illustrations.map(n=>BASE+'/assets/'+n+'.webp'),BASE+'/audio/bakery-theme.mp3',...sounds.map(n=>BASE+'/audio/'+n+'.wav')])));self.skipWaiting();});
 self.addEventListener('activate',event=>{event.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('superelly-')&&k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()]));});
