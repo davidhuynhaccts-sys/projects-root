@@ -20,7 +20,7 @@ export class BakeryModel{
  state:GameSnapshot; x=120;y:number;z=0;vz=0;facing=1;time=0;floor:number;top:number;moving=false;
  cookieShots:{id:number;x:number;y:number;vx:number;age:number}[]=[];enemies:Monster[]=[];shots:Projectile[]=[];cookies:{id:number;x:number;y:number;taken:boolean}[]=[];
  crates:{id:number;x:number;y:number;hp:number}[]=[];pickups:{id:number;x:number;y:number;kind:'donut'|'hashbrown'|'waffle';taken:boolean}[]=[];events:GameEvent[]=[];bossActive=false;bossDefeated=false;
- acro:Move|null=null;acroStart=0;acroUntil=0;superStart=0;superUntil=0;superPulse=0;superTotal=40;superTarget=-1;superAnchor=0;invulnerable=0;
+ acro:Move|null=null;acroStart=0;acroUntil=0;superStart=0;superUntil=0;superPulse=0;superTotal=40;superTarget=-1;superAnchor=0;superStartX=0;invulnerable=0;
  private lastFlash=-1000;private lastAction=-1000;private lastJump=-1000;private nextId=100;private previousMove:Move|null=null;
  private hintUntil=0;
  constructor(height:number,private random=()=>Math.random(),public level:LevelId=1,public character:CharacterId='elly'){
@@ -75,7 +75,7 @@ export class BakeryModel{
   if(!target){this.hint('Get closer to a monster to use Hyper Front Walkover!');return;}
   this.state.charge=0;this.superStart=this.time;this.superUntil=this.time+(this.character==='ollie'?2600:4000);this.superPulse=0;this.superTotal=35+Math.floor(this.random()*21);this.acroUntil=0;this.z=0;this.vz=0;this.superTarget=target.id;
   if(this.character==='ollie')this.facing=target.x>=this.x?1:-1;
-  this.superAnchor=this.character==='ollie'?target.x:clamp(this.x+this.facing*100,90,WORLD-100);this.state.comboHits=0;this.state.comboMove=this.character==='ollie'?'YELLOW CAR!':'FRONT WALKOVER';this.state.superActive=true;this.invulnerable=this.superUntil+600;this.shots=[];this.cookieShots=[];this.event('special',this.x,this.y-70,{text:this.character==='ollie'?'YELLOW CAR!':'HYPER FRONT WALKOVER!'});
+  this.superStartX=this.x;this.superAnchor=this.character==='ollie'?target.x:clamp(this.x+this.facing*100,90,WORLD-100);this.state.comboHits=0;this.state.comboMove=this.character==='ollie'?'YELLOW CAR!':'FRONT WALKOVER';this.state.superActive=true;this.invulnerable=this.superUntil+600;this.shots=[];this.cookieShots=[];this.event('special',this.x,this.y-70,{text:this.character==='ollie'?'YELLOW CAR!':'HYPER FRONT WALKOVER!'});
  }
  step(seconds:number,input:Record<Control,boolean>){if(this.state.status!=='playing')return;const dt=Math.min(.05,Math.max(0,seconds));this.time+=dt*1000;
   const oldX=this.x,oldY=this.y;let dx=Number(input.right)-Number(input.left),dy=Number(input.down)-Number(input.up);const norm=Math.hypot(dx,dy)||1;dx/=norm;dy/=norm;this.moving=!!(dx||dy);if(dx)this.facing=Math.sign(dx);
@@ -95,7 +95,7 @@ export class BakeryModel{
   if(this.x>3650&&!this.bossActive){this.bossActive=true;this.state.bossHealth=this.boss.hp;this.boss.attackAt=this.time+1000;this.hint('Dodge the ingredients! Match the monster’s height to attack.',4000);}
   for(const item of this.pickups)if(!item.taken&&this.state.health<5&&Math.abs(item.x-this.x)<50&&Math.abs(item.y-this.y)<45&&this.z<45){item.taken=true;this.state.health=Math.min(5,this.state.health+1);this.event('heal',item.x,item.y-35,{text:'+1 HEART!'});}
   if(this.time<this.superUntil){this.state.superActive=true;const age=this.time-this.superStart,target=this.enemies.find(e=>e.id===this.superTarget)!;
-   if(this.character==='ollie')this.x=this.superAnchor-this.facing*180+(this.facing*360*Math.min(1,age/(this.superUntil-this.superStart)));
+   if(this.character==='ollie')this.x=this.superStartX+(this.superAnchor+this.facing*180-this.superStartX)*Math.min(1,age/(this.superUntil-this.superStart));
    target.x+=(this.superAnchor-target.x)*Math.min(1,dt*12);target.y+=(this.y-target.y)*Math.min(1,dt*12);target.z=age<600?0:35+Math.sin(age/60)*14;this.shots=[];
    const pulse=clamp(Math.floor((age-(this.character==='ollie'?250:750))/((this.character==='ollie'?1850:2400)/(this.superTotal-1)))+1,0,this.superTotal);
    while(this.superPulse<pulse&&target.hp>0){this.superPulse++;this.state.comboHits=this.superPulse;this.state.comboMove=this.character==='ollie'?'DRIVE OVER!':this.superPulse<this.superTotal?'HELICOPTER KICK':'WALKOVER FINISH!';this.hit(target,this.character==='ollie'?(this.superPulse===this.superTotal?target.hp:Math.min(target.hp-.01,target.max/this.superTotal)):this.superPulse<this.superTotal?Math.min(14/(this.superTotal-1),Math.max(0,target.hp-.1)):2,true);this.event('superHit',target.x,target.y-target.z-50,{text:this.state.comboMove,hits:this.superPulse});}
