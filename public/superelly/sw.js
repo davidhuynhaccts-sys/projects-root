@@ -1,4 +1,4 @@
-const CACHE='superelly-bakery-v6';
+const CACHE='superelly-bakery-v7';
 const BASE='/superelly';
 const illustrations=['elly-idle','elly-run','elly-jump','cartwheel','roll','bridge','yellow','pink','blue','boss','cookie','crate','egg','milk','cheese','room-shop','room-pantry','room-kitchen','room-machine'];
 const sounds=['cookie','jump','hit','acro','special','hurt','throw','learn','win','flash'];

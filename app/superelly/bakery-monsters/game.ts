@@ -21,22 +21,26 @@ export function createGame(parent:HTMLElement,onState:(s:GameSnapshot)=>void,lev
    const peanut=this.make.graphics({x:0,y:0});peanut.fillStyle(0xd6a269);peanut.lineStyle(2,0x936039);peanut.fillEllipse(17,14,23,25).strokeEllipse(17,14,23,25);peanut.fillEllipse(17,32,23,25).strokeEllipse(17,32,23,25);peanut.lineStyle(1,0xb9814a);for(let i=8;i<40;i+=6)peanut.lineBetween(10,i,24,i+3);peanut.generateTexture('peanut',35,48);peanut.destroy();
    const h=this.scale.height;
    LEVELS[level].rooms.forEach((name,i)=>{this.add.image(i*1100,0,`room-${name}`).setOrigin(0).setDisplaySize(1102,h).setDepth(-20);if(i>0){this.add.rectangle(i*1100,h/2,20,h,0xc79970).setDepth(-10);this.add.rectangle(i*1100+8,h/2,5,h,0xf4d6b0).setDepth(-9);}this.add.text(i*1100+380,Math.max(75,h*.25),LEVELS[level].zones[i],{fontFamily:'Georgia',fontSize:'19px',color:'#754b36',backgroundColor:'#fff4de',padding:{x:15,y:9}}).setOrigin(.5).setDepth(-8);});
-   if(level===2){
+   if(level===2||level===3){
     for(let room=0;room<4;room++){
-     const shelf=this.add.graphics().setDepth(-7);shelf.fillStyle([0xc7b8d5,0xc5d5bd,0xdac6ad,0xbcc7d6][room],.75).fillRoundedRect(room*1100+30,h*.35,1035,h*.47,15);
+     const shelf=this.add.graphics().setDepth(-7);shelf.fillStyle(level===2?[0xc7b8d5,0xc5d5bd,0xdac6ad,0xbcc7d6][room]:[0xd2c3b0,0xe0cbb0,0xc7d1b9,0xd7c2ad][room],.75).fillRoundedRect(room*1100+30,h*.35,1035,h*.47,15);
      for(let row=0;row<3;row++){const y=h*(.45+row*.12);shelf.fillStyle(0xa47d5c).fillRoundedRect(room*1100+45,y+28,1000,9,3);
       for(let j=0;j<11;j++){const x=room*1100+85+j*88;this.add.image(x,y+25,j%3===0?'crate':j%3===1?'milk':'cheese').setDisplaySize(j%3===0?65:36,j%3===0?49:43).setDepth(-6);}
      }
-     this.add.text(room*1100+900,h*.38,room===3?'MORE! MORE!':'DELIVERY',{fontFamily:'Georgia',fontSize:'18px',color:'#805b64',backgroundColor:'#fff0d6',padding:{x:8,y:6}}).setOrigin(.5).setDepth(-5);
+     if(level===2)this.add.text(room*1100+900,h*.38,room===3?'MORE! MORE!':'DELIVERY',{fontFamily:'Georgia',fontSize:'18px',color:'#805b64',backgroundColor:'#fff0d6',padding:{x:8,y:6}}).setOrigin(.5).setDepth(-5);
+     else {
+      for(let j=0;j<5;j++){const x=room*1100+130+j*215,y=h*(.53+(j%2)*.14);this.add.text(x,y,['🥄','🧁','🍯','🥣','🎂'][j],{fontSize:'27px',backgroundColor:'#fff0d9',padding:{x:4,y:3}}).setOrigin(.5).setDepth(-4);}
+      this.add.text(room*1100+895,h*.38,room===2?'TOOLS →':'TOO FAR!',{fontFamily:'Georgia',fontSize:'17px',color:'#805b64',backgroundColor:'#fff0d6',padding:{x:8,y:6}}).setOrigin(.5).setDepth(-5);
+     }
     }
    }
    for(const c of this.model.crates)this.crateSprites.set(c.id,this.add.image(c.x,c.y,'crate').setOrigin(.5,1).setDisplaySize(95,59).setDepth(c.y));
    for(const c of this.model.cookies)this.cookies.set(c.id,this.add.image(c.x,c.y,'cookie').setDisplaySize(27,27).setDepth(c.y+70));
-   for(const e of this.model.enemies){this.monsters.set(e.id,this.add.image(e.x,e.y,e.kind).setOrigin(.5,1).setDisplaySize(e.boss?(level===2?185:155):83,e.boss?(level===2?180:145):80));this.bars.set(e.id,this.add.graphics());}
+   for(const e of this.model.enemies){this.monsters.set(e.id,this.add.image(e.x,e.y,e.kind).setOrigin(.5,1).setDisplaySize(e.boss?(level===2?185:level===3?150:155):83,e.boss?(level===2?180:level===3?140:145):80));this.bars.set(e.id,this.add.graphics());}
    this.shadow=this.add.ellipse(this.model.x,this.model.y,65,12,0x77513a,.24).setDepth(this.model.y-1);
    this.player=this.add.image(this.model.x,this.model.y,'elly-idle').setOrigin(.5,1).setDisplaySize(116,129);this.beam=this.add.graphics().setDepth(2000);this.aura=this.add.graphics().setDepth(1999);
    for(let i=0;i<4;i++)this.trails.push(this.add.image(0,0,'elly-jump').setVisible(false));
-   this.machine=level===1?this.makeMachine(MACHINE_X,this.model.lane(.7)):this.add.container(MACHINE_X,this.model.lane(.7),[this.add.image(0,-35,'crate').setDisplaySize(110,85),this.add.image(-20,-99,'crate').setDisplaySize(90,70),this.add.text(0,-168,'ORDERS',{fontFamily:'Georgia',fontSize:'18px',color:'#76533f',backgroundColor:'#fff1d4',padding:{x:8,y:7}}).setOrigin(.5)]).setDepth(this.model.lane(.7));
+   this.machine=level===1?this.makeMachine(MACHINE_X,this.model.lane(.7)):level===2?this.add.container(MACHINE_X,this.model.lane(.7),[this.add.image(0,-35,'crate').setDisplaySize(110,85),this.add.image(-20,-99,'crate').setDisplaySize(90,70),this.add.text(0,-168,'ORDERS',{fontFamily:'Georgia',fontSize:'18px',color:'#76533f',backgroundColor:'#fff1d4',padding:{x:8,y:7}}).setOrigin(.5)]).setDepth(this.model.lane(.7)):this.add.container(MACHINE_X,this.model.lane(.7),[this.add.text(0,-145,'SPINNY!',{fontFamily:'Georgia',fontSize:'20px',color:'#805b64',backgroundColor:'#fff0d6',padding:{x:10,y:8}}).setOrigin(.5),this.add.image(0,-45,'pink').setDisplaySize(130,120)]).setDepth(this.model.lane(.7));
    this.cameras.main.setBounds(0,0,WORLD,h);this.cameras.main.startFollow(this.player,true,.12,0,-60,0);this.cameras.main.setScroll(0,0);
    this.input.keyboard?.on('keydown',(e:KeyboardEvent)=>{const key=keyControl(e.code);if(key){e.preventDefault();if(this.model.state.status==='playing')controls[key]=true;}if(e.code==='Escape'){if(this.model.state.status==='playing')this.pauseGame();else if(this.model.state.status==='paused')this.resumeGame();}});
    this.input.keyboard?.on('keyup',(e:KeyboardEvent)=>{const key=keyControl(e.code);if(key)controls[key]=false;});

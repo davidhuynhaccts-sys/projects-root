@@ -8,10 +8,11 @@ export type Monster={id:number;x:number;y:number;z:number;home:number;lane:numbe
 export type Projectile={id:number;food:Food;x:number;y:number;vx:number;vy:number;age:number};
 export const WORLD=4400,BOSS_X=3990,MACHINE_X=4220,SPEED=185;
 export const ZONES=['The cookie shop','The flour pantry','The prep kitchen','The cookie machine'];
-export type LevelId=1|2;
+export type LevelId=1|2|3;
 export const LEVELS={
  1:{title:'The cookie caper',boss:'Cookie Machine Monster',zones:ZONES,rooms:['shop','pantry','kitchen','machine'],bossHp:24,intro:'The machine is moving cookies too much and breaking them! Help Elly cross four bakery rooms and defeat the cookie machine monster.'},
- 2:{title:'Storage room scramble',boss:'Inventory Monster',zones:['The delivery doorway','The crowded storeroom','The ingredient stacks','The inventory monster'],rooms:['pantry','pantry','kitchen','pantry'],bossHp:32,intro:'The storage room is overflowing! A monster keeps buying more ingredients than Jaylean needs. Clear a path through the stacks and make room for cookies!'}
+ 2:{title:'Storage room scramble',boss:'Inventory Monster',zones:['The delivery doorway','The crowded storeroom','The ingredient stacks','The inventory monster'],rooms:['pantry','pantry','kitchen','pantry'],bossHp:32,intro:'The storage room is overflowing! A monster keeps buying more ingredients than Jaylean needs. Clear a path through the stacks and make room for cookies!'},
+ 3:{title:'Kitchen in a whirl',boss:'Motion Monster',zones:['The scattered kitchen','The busy prep counter','The tool wall','The spinning kitchen'],rooms:['kitchen','kitchen','pantry','kitchen'],bossHp:30,intro:'Jaylean is running all over the kitchen! A monster has scattered the tools and ingredients. Put things close to where they are needed and help Jaylean stop all that extra running!'}
 } as const;
 export const emptyControls=():Record<Control,boolean>=>({left:false,right:false,up:false,down:false,jump:false,flash:false,action:false,special:false});
 export class BakeryModel{
@@ -34,6 +35,13 @@ export class BakeryModel{
    this.enemies.push({id:8,x:BOSS_X,y:this.lane(.55),z:0,home:BOSS_X,lane:.55,hp:32,max:32,boss:true,kind:'pink',hitAt:-1000,attackAt:0,stunnedUntil:0,knockX:0,knockY:0,warning:null,throwAt:0,phase:0});
    this.crates=[650,1040,1210,1590,2020,2460,2840,3220,3650].map((x,id)=>({id,x,y:this.lane([.18,.8,.48][id%3]),hp:2}));
    this.cookies=Array.from({length:44},(_,id)=>({id,x:220+id*82,y:this.lane(.5+Math.sin(id*.55)*.35)-25,taken:false}));
+  }
+  if(level===3){
+   const positions=[520,930,1370,1770,2220,2670,3090,3480];
+   this.enemies=positions.map((x,i)=>({...this.enemies[i%6],id:i,x,home:x,hp:5,max:5,kind:['yellow','blue','pink'][i%3],phase:i}));
+   this.enemies.push({id:8,x:BOSS_X,y:this.lane(.55),z:0,home:BOSS_X,lane:.55,hp:30,max:30,boss:true,kind:'pink',hitAt:-1000,attackAt:0,stunnedUntil:0,knockX:0,knockY:0,warning:null,throwAt:0,phase:4});
+   this.crates=[700,1120,1510,1940,2370,2780,3170,3590].map((x,id)=>({id,x,y:this.lane([.35,.75,.48][id%3]),hp:2}));
+   this.cookies=Array.from({length:42},(_,id)=>({id,x:230+id*86,y:this.lane(.5+Math.sin(id*.59)*.32)-25,taken:false}));
   }
   this.state.bossMax=LEVELS[level].bossHp;this.state.zone=LEVELS[level].zones[0];
  }
@@ -93,7 +101,7 @@ export class BakeryModel{
   for(const shot of this.shots){shot.x+=shot.vx*dt;shot.y+=shot.vy*dt;shot.age+=dt;if(Math.abs(shot.x-this.x)<37&&Math.abs(shot.y-(this.y-this.z-45))<42){this.hurt();shot.age=9;}}
   this.shots=this.shots.filter(s=>s.age<6&&s.x>0&&s.x<WORLD&&s.y>30&&s.y<this.floor+70);
   if(this.state.status!=='playing')return;
-  if(this.time>=this.hintUntil&&!this.bossDefeated){this.state.hint=this.x<600?'Move along the floor. Break crates with Action!':this.x<1100?'Hold 🍪 to throw cookies. Try Action for an acrobatic move!':this.x<2200?'Break crates for snacks that restore a heart.':this.x<3300?'Donuts, hash browns and waffles restore hearts.':this.bossActive?'Dodge the food! Get close for Action, or unleash ★.':this.level===2?'The inventory monster is just ahead…':'The cookie machine is just ahead…';}
+  if(this.time>=this.hintUntil&&!this.bossDefeated){this.state.hint=this.x<600?'Move along the floor. Break crates with Action!':this.x<1100?'Hold 🍪 to throw cookies. Try Action for an acrobatic move!':this.x<2200?'Break crates for snacks that restore a heart.':this.x<3300?'Donuts, hash browns and waffles restore hearts.':this.bossActive?'Dodge the food! Get close for Action, or unleash ★.':this.level===2?'The inventory monster is just ahead…':this.level===3?'The motion monster is just ahead…':'The cookie machine is just ahead…';}
   const nearest=Math.min(800,...this.enemies.filter(e=>e.hp>0).map(e=>Math.hypot(e.x-this.x,e.y-this.y)));this.state.detector=clamp(100-nearest/4,0,100);this.state.progress=Math.min(98,this.x/MACHINE_X*100);this.state.zone=LEVELS[this.level].zones[Math.min(3,Math.floor(this.x/1100))];
  }
  drainEvents(){return this.events.splice(0);}

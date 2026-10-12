@@ -9,7 +9,7 @@ export default function GameClient({initialLevel=1}:{initialLevel?:LevelId}){
  return <GameSession key={level} level={level} onLevel={setLevel}/>;
 }
 function GameSession({level,onLevel}:{level:LevelId;onLevel:(level:LevelId)=>void}){
- const config=LEVELS[level],scoreKey=level===1?'superelly-best':'superelly-best-2';
+ const config=LEVELS[level],scoreKey=`superelly-best-${level}`;
  const mount=useRef<HTMLDivElement>(null),engine=useRef<GameHandle|null>(null);
  const [state,setState]=useState(initial),[muted,setMuted]=useState(false),[best,setBest]=useState(0),[error,setError]=useState('');
  useEffect(()=>{let disposed=false;let handle:GameHandle|undefined;
@@ -33,19 +33,25 @@ function GameSession({level,onLevel}:{level:LevelId;onLevel:(level:LevelId)=>voi
  {state.audioBlocked&&state.status==='playing'&&<button className="audio-retry" onClick={toggleMute}>♫ Tap for music</button>}
  <div className="combo-hud" hidden={!state.superActive}><strong>{state.comboHits}</strong><span>HIT COMBO</span><small>{state.comboMove}</small></div>
  <div className="journey-track"><i style={{width:`${state.progress}%`}}/></div>
- {state.status==='won'?<div className="game-overlay rescue-overlay"><section className={`rescue-scene ${level===2?'inventory-rescue':''}`} aria-label={level===1?"Elly stops the broken conveyor, moves it into a direct route, and sends cookies safely to the display.":"Elly cancels extra deliveries, clears excess ingredient boxes, sorts the remaining supplies onto shelves and fills the newly available space with cookies."}>
+ {state.status==='won'?<div className="game-overlay rescue-overlay"><section className={`rescue-scene ${level===2?'inventory-rescue':level===3?'motion-rescue':''}`} aria-label={level===1?"Elly stops the broken conveyor and sends cookies safely to the display.":level===2?"Elly stops extra deliveries, clears the clutter, and sorts supplies onto shelves.":"Elly gathers the kitchen tools and ingredients and puts them close to where Jaylean needs them."}>
  {level===1?<><div className="rescue-kitchen">♨</div><div className="rescue-display"><span>🍪 🍪 🍪</span></div>
  <div className="rescue-belt belt-one"/><div className="rescue-belt belt-two"/><div className="rescue-belt belt-three"/>
  <div className="rescue-switch">●</div><img className="rescue-elly" src="/superelly/assets/elly-run.webp" alt="Elly fixing the cookie conveyor"/>
  {[0,1,2,3].map(i=><img key={i} className={`rescued-cookie rescued-cookie-${i}`} src="/superelly/assets/cookie.webp" alt=""/>)}
- </>:<><div className="inventory-door"><span>📦</span></div><div className="inventory-stop">✋</div><div className="inventory-shelves"><span>🌾</span><span>🍬</span><span>🧂</span></div>
+ </>:level===2?<><div className="inventory-door"><span>📦</span></div><div className="inventory-stop">✋</div><div className="inventory-shelves"><span>🌾</span><span>🍬</span><span>🧂</span></div>
  {Array.from({length:6},(_,i)=><div key={i} className={`inventory-box inventory-box-${i}`}><img src="/superelly/assets/crate.webp" alt=""/></div>)}
  <img className="inventory-elly" src="/superelly/assets/elly-run.webp" alt="Elly clearing and organizing the storage room"/>
- <div className="inventory-cookie-space">🍪 🍪 🍪<br/>🍪 🍪 🍪</div></>}
+ <div className="inventory-cookie-space">🍪 🍪 🍪<br/>🍪 🍪 🍪</div></>:<>
+ <div className="motion-tool-wall"><span>🥄</span><span>🥣</span><span>🧁</span><span>🍯</span><span>🎂</span></div>
+ <div className="motion-workbench">Jaylean’s workbench</div>
+ <div className="motion-scatter">🥄　🍯　　 🥣　　 🧁</div>
+ <img className="motion-elly" src="/superelly/assets/elly-run.webp" alt="Elly organizing the kitchen tools"/>
+ <div className="motion-monster">💨</div>
+ </>}
  <div className="rescue-sparkles">✦ ✧ ✦</div>
- <div className="rescue-complete"><h1>Level {level} complete!</h1><p>{state.cookies} cookies • Best: {best}</p><button className="elly-primary" onClick={()=>level===1?onLevel(2):engine.current?.start()}>{level===1?'Continue to Level 2 ➜':'Play Level 2 again ➜'}</button><button className="sound-btn" onClick={()=>onLevel(level===1?2:1)}>{level===2?'Back to Level 1':'Storage room scramble'}</button><Link className="home-link" href="/superelly">Back to Super Elly</Link></div>
+ <div className="rescue-complete"><h1>Level {level} complete!</h1><p>{state.cookies} cookies • Best: {best}</p><button className="elly-primary" onClick={()=>level<3?onLevel((level+1) as LevelId):engine.current?.start()}>{level<3?`Continue to Level ${level+1} ➜`:`Play Level ${level} again ➜`}</button><button className="sound-btn" onClick={()=>onLevel(level===1?2:level===2?3:1)}>{level===3?'Back to Level 1':level===2?'Continue to Level 3':'Storage room scramble'}</button><Link className="home-link" href="/superelly">Back to Super Elly</Link></div>
  </section></div>:state.status!=='playing' &&<div className="game-overlay"><section className="story-card">
- {(state.status==='ready'||state.status==='paused')&&<div className="level-picker" aria-label="Choose level">{([1,2] as LevelId[]).map(n=><button key={n} aria-pressed={level===n} onClick={()=>onLevel(n)}>Level {n}<small>{n===1?'Cookie caper':'Storage scramble'}</small></button>)}</div>}
+ {(state.status==='ready'||state.status==='paused')&&<div className="level-picker" aria-label="Choose level">{([1,2,3] as LevelId[]).map(n=><button key={n} aria-pressed={level===n} onClick={()=>onLevel(n)}>Level {n}<small>{n===1?'Cookie caper':n===2?'Storage scramble':'Kitchen in a whirl'}</small></button>)}</div>}
  <span className="card-sparkle">✦</span><p className="eyebrow">SUPER ELLY • LEVEL {level}</p>
  <h1>{failed?'Oops!':state.status==='loading'?'A little magic…':state.status==='ready'?config.title:state.status==='paused'?'Cookie break!':'A little more courage?'}</h1>
  <p>{error||(state.status==='error'?'An illustration couldn’t load. Please try again.':state.status==='ready'?config.intro:state.status==='paused'?'Your adventure will be right here.':state.status==='lost'?'Those sneaky monsters! Take a breath and try again.':'Packing the cookies and a little bravery.')}</p>
