@@ -46,3 +46,25 @@ m=fresh();m.x=480;m.y=m.enemies[0].y;m.invulnerable=1e9;const originalHp=m.enemi
 console.log('PASS cookies travel before damaging monsters');
 for(const [random,food,warning] of [[0,'egg','EGG ALLERGY!'],[.3,'milk','DAIRY ALLERGY!'],[.6,'cheese','DAIRY ALLERGY!'],[.99,'peanut','NUT ALLERGY!']]){m=fresh(()=>random);m.x=420;m.invulnerable=1e9;tick(m,.85);const events=m.drainEvents();assert(events.some(e=>e.type==='warning'&&e.food===food&&e.text===warning));assert(events.some(e=>e.type==='throw'&&e.food===food));}
 console.log('PASS regular monsters throw all four allergens with matching warnings');
+
+for(const height of [320,600,850]){
+ const storage=new BakeryModel(height,()=>.3,2);assert.equal(storage.state.bossMax,32);assert.equal(storage.enemies.length,9);assert.equal(storage.crates.length,9);assert.equal(storage.boss.id,8);assert.equal(storage.boss.kind,'pink');
+ assert(storage.enemies.every(e=>e.y>=storage.top&&e.y<=storage.floor));assert.equal(storage.state.zone,'The delivery doorway');
+}
+for(const roll of [0,.5,.999]){const storage=new BakeryModel(600,()=>roll,2);storage.start();storage.x=3700;tick(storage,.02);storage.x=storage.boss.x-100;storage.state.charge=100;storage.special();tick(storage,4.1);assert.equal(storage.state.comboHits,35+Math.floor(roll*21));assert(Math.abs(storage.boss.hp-16)<.01);}
+console.log('PASS Level 2 configuration, floor boundaries and special damage');
+for(const seed of [7,43,109]){
+ let rng=seed;const storage=new BakeryModel(600,()=>((rng=(rng*1664525+1013904223)>>>0)/4294967296),2);storage.start();let frame=0,specials=0;const visited=new Set();
+ while(storage.state.status==='playing'&&frame<60*150){
+  const input=emptyControls(),target=storage.enemies.find(e=>e.hp>0&&e.x>storage.x-150);let destX=MACHINE_X,destY=storage.lane(.7);
+  if(target){destX=target.x-(target.boss?105:180);destY=target.y-target.z;input.flash=true;if(target.boss&&storage.bossActive)input.action=true;if(target.boss&&!storage.bossActive)destX=3700;if(storage.state.charge>=100&&target.boss&&storage.bossActive&&!storage.state.superActive){input.special=true;specials++;}}
+  if(Math.abs(destX-storage.x)>12){input.right=destX>storage.x;input.left=destX<storage.x;}if(Math.abs(destY-storage.y)>8){input.down=destY>storage.y;input.up=destY<storage.y;}
+  if(storage.crates.some(c=>c.hp>0&&Math.abs(c.x-storage.x)<140&&Math.abs(c.y-storage.y)<60))input.action=true;
+  if(storage.bossActive&&storage.shots.some(s=>Math.abs(s.x-storage.x)<75&&Math.abs(s.y-(storage.y-storage.z-45))<75))input.jump=true;
+  storage.step(1/60,input);visited.add(storage.state.zone);storage.drainEvents();frame++;
+ }
+ assert.equal(storage.state.status,'won',JSON.stringify({seed,x:storage.x,hp:storage.state.health,boss:storage.boss.hp,enemies:storage.enemies.map(e=>e.hp)}));assert.equal(visited.size,4);assert(specials>0);assert(storage.crates.some(c=>c.hp===0));assert.equal(storage.shots.length,0);
+ console.log(`PASS Level 2 input-driven run seed ${seed}: ${(frame/60).toFixed(1)} seconds, ${storage.state.health} hearts, all four rooms, victory`);
+}
+const replay=new BakeryModel(600,()=>.5,2);assert.equal(replay.state.status,'ready');assert.equal(replay.state.health,5);assert.equal(replay.boss.hp,32);assert(replay.crates.every(c=>c.hp===2));assert.equal(new BakeryModel(600).boss.hp,24);
+console.log('PASS Level 2 replay resets and Level 1 remains unchanged');

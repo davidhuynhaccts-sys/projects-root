@@ -1,11 +1,11 @@
 import Phaser from 'phaser';
-import {BakeryModel,emptyControls,WORLD,BOSS_X,MACHINE_X,ZONES,Control,GameSnapshot,GameEvent} from './model';
+import {BakeryModel,emptyControls,WORLD,BOSS_X,MACHINE_X,LEVELS,LevelId,Control,GameSnapshot,GameEvent} from './model';
 import {BakeryAudio,Effect} from './audio';
 export type {Control,GameSnapshot} from './model';
 
 export type GameHandle={input:(key:Control,down:boolean)=>void;start:()=>void;pause:()=>void;resume:()=>void;mute:(v:boolean)=>void;destroy:()=>void};
 export const ASSETS=['elly-idle','elly-run','elly-jump','cartwheel','roll','bridge','yellow','pink','blue','boss','cookie','crate','egg','milk','cheese','room-shop','room-pantry','room-kitchen','room-machine'];
-export function createGame(parent:HTMLElement,onState:(s:GameSnapshot)=>void):GameHandle{
+export function createGame(parent:HTMLElement,onState:(s:GameSnapshot)=>void,level:LevelId=1):GameHandle{
  const controls=emptyControls();let scene:BakeryScene|undefined;let destroyed=false;
  const audio=new BakeryAudio(()=>{if(scene){scene.model.state.audioBlocked=true;scene.emit();}});
  const clear=()=>Object.keys(controls).forEach(k=>controls[k as Control]=false);
@@ -14,27 +14,36 @@ export function createGame(parent:HTMLElement,onState:(s:GameSnapshot)=>void):Ga
   monsters=new Map<number,Phaser.GameObjects.Image>();bars=new Map<number,Phaser.GameObjects.Graphics>();cookies=new Map<number,Phaser.GameObjects.Image>();shots=new Map<number,Phaser.GameObjects.Image>();crateSprites=new Map<number,Phaser.GameObjects.Image>();snacks=new Map<number,Phaser.GameObjects.Container>();cookieSprites=new Map<number,Phaser.GameObjects.Image>();trails:Phaser.GameObjects.Image[]=[];machine!:Phaser.GameObjects.Container;
   loaded=false;loadFailed=false;lastEmit=0;lastSound=0;superVisual=0;
   constructor(){super('Bakery');scene=this;}
-  init(){this.model=new BakeryModel(this.scale.height);this.monsters=new Map();this.bars=new Map();this.cookies=new Map();this.shots=new Map();this.crateSprites=new Map();this.snacks=new Map();this.trails=[];this.cookieSprites=new Map();this.loaded=false;this.loadFailed=false;this.lastEmit=0;this.lastSound=0;this.superVisual=0;}
+  init(){this.model=new BakeryModel(this.scale.height,Math.random,level);this.monsters=new Map();this.bars=new Map();this.cookies=new Map();this.shots=new Map();this.crateSprites=new Map();this.snacks=new Map();this.trails=[];this.cookieSprites=new Map();this.loaded=false;this.loadFailed=false;this.lastEmit=0;this.lastSound=0;this.superVisual=0;}
   preload(){for(const key of ASSETS)this.load.image(key,`/superelly/assets/${key}.webp`);this.load.once('loaderror',()=>this.loadFailed=true);}
   create(){
    if(this.loadFailed){this.model.state.status='error';this.model.state.hint='An illustration could not load. Please reload.';this.emit();return;}
    const peanut=this.make.graphics({x:0,y:0});peanut.fillStyle(0xd6a269);peanut.lineStyle(2,0x936039);peanut.fillEllipse(17,14,23,25).strokeEllipse(17,14,23,25);peanut.fillEllipse(17,32,23,25).strokeEllipse(17,32,23,25);peanut.lineStyle(1,0xb9814a);for(let i=8;i<40;i+=6)peanut.lineBetween(10,i,24,i+3);peanut.generateTexture('peanut',35,48);peanut.destroy();
    const h=this.scale.height;
-   ['shop','pantry','kitchen','machine'].forEach((name,i)=>{this.add.image(i*1100,0,`room-${name}`).setOrigin(0).setDisplaySize(1102,h).setDepth(-20);if(i>0){this.add.rectangle(i*1100,h/2,20,h,0xc79970).setDepth(-10);this.add.rectangle(i*1100+8,h/2,5,h,0xf4d6b0).setDepth(-9);}this.add.text(i*1100+380,Math.max(75,h*.25),ZONES[i],{fontFamily:'Georgia',fontSize:'19px',color:'#754b36',backgroundColor:'#fff4de',padding:{x:15,y:9}}).setOrigin(.5).setDepth(-8);});
+   LEVELS[level].rooms.forEach((name,i)=>{this.add.image(i*1100,0,`room-${name}`).setOrigin(0).setDisplaySize(1102,h).setDepth(-20);if(i>0){this.add.rectangle(i*1100,h/2,20,h,0xc79970).setDepth(-10);this.add.rectangle(i*1100+8,h/2,5,h,0xf4d6b0).setDepth(-9);}this.add.text(i*1100+380,Math.max(75,h*.25),LEVELS[level].zones[i],{fontFamily:'Georgia',fontSize:'19px',color:'#754b36',backgroundColor:'#fff4de',padding:{x:15,y:9}}).setOrigin(.5).setDepth(-8);});
+   if(level===2){
+    for(let room=0;room<4;room++){
+     const shelf=this.add.graphics().setDepth(-7);shelf.fillStyle([0xc7b8d5,0xc5d5bd,0xdac6ad,0xbcc7d6][room],.75).fillRoundedRect(room*1100+30,h*.35,1035,h*.47,15);
+     for(let row=0;row<3;row++){const y=h*(.45+row*.12);shelf.fillStyle(0xa47d5c).fillRoundedRect(room*1100+45,y+28,1000,9,3);
+      for(let j=0;j<11;j++){const x=room*1100+85+j*88;this.add.image(x,y+25,j%3===0?'crate':j%3===1?'milk':'cheese').setDisplaySize(j%3===0?65:36,j%3===0?49:43).setDepth(-6);}
+     }
+     this.add.text(room*1100+900,h*.38,room===3?'MORE! MORE!':'DELIVERY',{fontFamily:'Georgia',fontSize:'18px',color:'#805b64',backgroundColor:'#fff0d6',padding:{x:8,y:6}}).setOrigin(.5).setDepth(-5);
+    }
+   }
    for(const c of this.model.crates)this.crateSprites.set(c.id,this.add.image(c.x,c.y,'crate').setOrigin(.5,1).setDisplaySize(95,59).setDepth(c.y));
    for(const c of this.model.cookies)this.cookies.set(c.id,this.add.image(c.x,c.y,'cookie').setDisplaySize(27,27).setDepth(c.y+70));
-   for(const e of this.model.enemies){this.monsters.set(e.id,this.add.image(e.x,e.y,e.kind).setOrigin(.5,1).setDisplaySize(e.boss?155:83,e.boss?145:80));this.bars.set(e.id,this.add.graphics());}
+   for(const e of this.model.enemies){this.monsters.set(e.id,this.add.image(e.x,e.y,e.kind).setOrigin(.5,1).setDisplaySize(e.boss?(level===2?185:155):83,e.boss?(level===2?180:145):80));this.bars.set(e.id,this.add.graphics());}
    this.shadow=this.add.ellipse(this.model.x,this.model.y,65,12,0x77513a,.24).setDepth(this.model.y-1);
    this.player=this.add.image(this.model.x,this.model.y,'elly-idle').setOrigin(.5,1).setDisplaySize(116,129);this.beam=this.add.graphics().setDepth(2000);this.aura=this.add.graphics().setDepth(1999);
    for(let i=0;i<4;i++)this.trails.push(this.add.image(0,0,'elly-jump').setVisible(false));
-   this.machine=this.makeMachine(MACHINE_X,this.model.lane(.7));
+   this.machine=level===1?this.makeMachine(MACHINE_X,this.model.lane(.7)):this.add.container(MACHINE_X,this.model.lane(.7),[this.add.image(0,-35,'crate').setDisplaySize(110,85),this.add.image(-20,-99,'crate').setDisplaySize(90,70),this.add.text(0,-168,'ORDERS',{fontFamily:'Georgia',fontSize:'18px',color:'#76533f',backgroundColor:'#fff1d4',padding:{x:8,y:7}}).setOrigin(.5)]).setDepth(this.model.lane(.7));
    this.cameras.main.setBounds(0,0,WORLD,h);this.cameras.main.startFollow(this.player,true,.12,0,-60,0);this.cameras.main.setScroll(0,0);
    this.input.keyboard?.on('keydown',(e:KeyboardEvent)=>{const key=keyControl(e.code);if(key){e.preventDefault();if(this.model.state.status==='playing')controls[key]=true;}if(e.code==='Escape'){if(this.model.state.status==='playing')this.pauseGame();else if(this.model.state.status==='paused')this.resumeGame();}});
    this.input.keyboard?.on('keyup',(e:KeyboardEvent)=>{const key=keyControl(e.code);if(key)controls[key]=false;});
    this.events.once(Phaser.Scenes.Events.SHUTDOWN,()=>{clear();this.input.keyboard?.removeAllListeners();});this.loaded=true;this.renderFrame();this.emit();
   }
   makeMachine(x:number,y:number){const parts:Phaser.GameObjects.GameObject[]=[this.add.rectangle(0,-36,84,70,0xb3c8ba).setStrokeStyle(3,0x81654f),this.add.circle(0,-42,23,0xe58480).setStrokeStyle(3,0x97524b),this.add.text(0,-43,'Ⅱ',{fontFamily:'Arial',fontSize:'28px',color:'#fff7df'}).setOrigin(.5),this.add.text(0,-95,'STOP SWITCH',{fontFamily:'Georgia',fontSize:'12px',color:'#75503b',backgroundColor:'#fff4db',padding:{x:8,y:5}}).setOrigin(.5)];return this.add.container(x,y,parts).setDepth(y);}
-  emit(){const m=this.model;if(!m)return;parent.dataset.gameState=JSON.stringify({version:4,x:Math.round(m.x),y:Math.round(m.y),jump:Math.round(m.z),health:m.state.health,cookies:m.state.cookies,charge:m.state.charge,status:m.state.status,move:m.acro,superActive:m.state.superActive,bossHealth:m.state.bossHealth,comboHits:m.state.comboHits,comboTotal:m.superTotal,cookieShots:m.cookieShots.length,comboMove:m.state.comboMove,crates:m.crates.map(c=>c.hp),pickups:m.pickups,zone:m.state.zone,enemies:m.enemies.map(e=>({id:e.id,hp:e.hp,x:Math.round(e.x),y:Math.round(e.y-e.z)})),projectiles:m.shots.map(s=>s.food),...audio.diagnostics()});onState({...m.state});}
+  emit(){const m=this.model;if(!m)return;parent.dataset.gameState=JSON.stringify({version:5,level,x:Math.round(m.x),y:Math.round(m.y),jump:Math.round(m.z),health:m.state.health,cookies:m.state.cookies,charge:m.state.charge,status:m.state.status,move:m.acro,superActive:m.state.superActive,bossHealth:m.state.bossHealth,comboHits:m.state.comboHits,comboTotal:m.superTotal,cookieShots:m.cookieShots.length,comboMove:m.state.comboMove,crates:m.crates.map(c=>c.hp),pickups:m.pickups,zone:m.state.zone,enemies:m.enemies.map(e=>({id:e.id,hp:e.hp,x:Math.round(e.x),y:Math.round(e.y-e.z)})),projectiles:m.shots.map(s=>s.food),...audio.diagnostics()});onState({...m.state});}
   begin(){clear();this.model.start();audio.playMusic();this.emit();}
   pauseGame(){if(this.model.state.status!=='playing')return;this.model.pause();clear();this.tweens.pauseAll();audio.pause();this.emit();}
   resumeGame(){if(this.model.state.status!=='paused')return;this.model.resume();clear();this.tweens.resumeAll();audio.playMusic();this.emit();}

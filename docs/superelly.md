@@ -1,6 +1,10 @@
-# Super Elly: Bakery Monsters, Level 1
+# Super Elly: Bakery Monsters, Levels 1 and 2
 
 Routes: `/superelly` and `/superelly/bakery-monsters`. Phaser + TypeScript with portrait iPhone controls.
+
+Level 2 is directly accessible at `/superelly/bakery-monsters?level=2`, through the level picker, or after the Level 1 ending. Its source story is the storage-room encounter in the April 4, 2022 book draft: a monster buys excess ingredients, which crowd the room and get old. Gameplay adapts this with four storage-themed rooms, nine breakable crates, eight regular monsters and a 32-health inventory boss throwing paired allergen projectiles. The wordless ending stops incoming deliveries, removes excess boxes, organizes remaining stock, and fills the freed space with cookies. The boss uses the existing pink monster illustration enlarged; no new book character design is claimed.
+
+Each level starts with five hearts, zero cookies and zero charge. Scores are stored separately. Switching levels destroys the prior Phaser/audio session. Level 1 behavior is preserved. Level 2 tests cover three seeded input-driven completions using ranged attacks, Action, dodges, and Special, plus model reset and layout bounds.
 
 Elly moves within the illustrated floor and throws traveling cookies using Cookie (keyboard F). Action breaks crates or performs an acrobatic attack. Crates drop donuts, hash browns, or waffles that restore one heart. Full-health snacks remain available.
 

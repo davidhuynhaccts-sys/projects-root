@@ -1,2 +1,3 @@
 import GameClient from './GameClient';
-export default function BakeryMonsters(){return <GameClient/>}
+import './level2.css';
+export default function BakeryMonsters({searchParams}:{searchParams:{level?:string}}){return <GameClient initialLevel={searchParams.level==='2'?2:1}/>}
