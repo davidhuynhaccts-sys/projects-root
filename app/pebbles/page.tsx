@@ -9,6 +9,7 @@ type Profile = { name: string; birthday?: string; heightInches?: number; weightL
 type PebblesState = {
   profile: Profile;
   periods: Record<string, PeriodKind>;
+  noPeriods: Record<string, boolean>;
   pills: Record<string, PillStatus>;
   poops: Record<string, boolean>;
   updatedAt: number;
@@ -74,9 +75,10 @@ function Month({
       {cells.map((date,i)=>{
         if(!date) return <div className="day blank" key={"b"+i}/>;
         const kind=state.periods[date];
+        const noPeriod=Boolean(state.noPeriods?.[date]);
         const pill=state.pills[date];
         const poop=state.poops[date];
-        const predicted=predictedDays.has(date) && !kind;
+        const predicted=predictedDays.has(date) && !kind && !noPeriod;
         return <button
           className={[
             "day",
@@ -143,14 +145,32 @@ export default function PebblesPage(){
     } finally { setSaving(false); }
   }
 
-  function patchDate(kind:"period"|"spotting"|"pill"|"poop", value:boolean){
+  function patchDate(kind:"period"|"noPeriod"|"spotting"|"pill"|"poop", value:boolean){
     if(!state||!selected)return;
-    const next={...state,periods:{...state.periods},pills:{...state.pills},poops:{...state.poops}};
+    const next={
+      ...state,
+      periods:{...state.periods},
+      noPeriods:{...(state.noPeriods||{})},
+      pills:{...state.pills},
+      poops:{...state.poops},
+    };
     if(kind==="period"){
-      if(value) next.periods[selected]="period"; else if(next.periods[selected]==="period") delete next.periods[selected];
+      if(value){
+        next.periods[selected]="period";
+        delete next.noPeriods[selected];
+      } else if(next.periods[selected]==="period") delete next.periods[selected];
+    }
+    if(kind==="noPeriod"){
+      if(value){
+        next.noPeriods[selected]=true;
+        delete next.periods[selected];
+      } else delete next.noPeriods[selected];
     }
     if(kind==="spotting"){
-      if(value) next.periods[selected]="spotting"; else if(next.periods[selected]==="spotting") delete next.periods[selected];
+      if(value){
+        next.periods[selected]="spotting";
+        delete next.noPeriods[selected];
+      } else if(next.periods[selected]==="spotting") delete next.periods[selected];
     }
     if(kind==="pill"){
       if(value) next.pills[selected]="taken"; else delete next.pills[selected];
@@ -224,6 +244,7 @@ export default function PebblesPage(){
   if(!state||!prediction) return <main className="shell loading">Loading Pebbles…</main>;
 
   const selectedKind=selected?state.periods[selected]:undefined;
+  const selectedNoPeriod=selected?Boolean(state.noPeriods?.[selected]):false;
   const selectedPill=selected?state.pills[selected]:undefined;
   const selectedPoop=selected?state.poops[selected]:false;
   const poopAgo=prediction.lastPoop?daysBetween(prediction.lastPoop,today):null;
@@ -274,6 +295,9 @@ export default function PebblesPage(){
         <div className="toggles">
           <button className={selectedKind==="period"?"active periodToggle":""} onClick={()=>patchDate("period",selectedKind!=="period")}>
             <span className="toggleDot periodDot"/>Period <b>{selectedKind==="period"?"✓":""}</b>
+          </button>
+          <button className={selectedNoPeriod?"active noPeriodToggle":""} onClick={()=>patchDate("noPeriod",!selectedNoPeriod)}>
+            <span className="toggleDot noPeriodDot"/>No period <b>{selectedNoPeriod?"✓":""}</b>
           </button>
           <button className={selectedKind==="spotting"?"active spottingToggle":""} onClick={()=>patchDate("spotting",selectedKind!=="spotting")}>
             <span className="toggleDot spottingDot"/>Spotting <b>{selectedKind==="spotting"?"✓":""}</b>

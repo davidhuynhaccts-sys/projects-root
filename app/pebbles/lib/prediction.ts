@@ -33,18 +33,32 @@ export function prediction(state: PebblesState) {
   const lengths = starts.slice(1).map((d,i) => diffDays(starts[i], d)).filter(n => n >= 15 && n <= 60);
   const recent = lengths.slice(-6);
   const avg = recent.length ? recent.reduce((a,b)=>a+b,0)/recent.length : 28;
-  const predicted = starts.length ? addDays(starts[starts.length-1], Math.round(avg)) : null;
+  const cycleDays = Math.round(avg);
+  let predicted = starts.length ? addDays(starts[starts.length-1], cycleDays) : null;
+
+  // A confirmed "no period" day is different from an unlogged day. If the
+  // predicted start did not happen, move the estimate forward. Future
+  // projections then use this updated estimate as their anchor.
+  let safety = 0;
+  while (predicted && state.noPeriods?.[predicted] && safety < 120) {
+    predicted = addDays(predicted, 1);
+    safety += 1;
+  }
+
   const today = todayInChicago();
   const lastPoop = Object.keys(state.poops).filter(d => state.poops[d]).sort().at(-1) || null;
   const pillDates = Object.keys(state.pills).filter(d => state.pills[d] === "taken").sort();
   const pillDay = state.profile.sprintecStartDate ? Math.max(0, diffDays(state.profile.sprintecStartDate, today) + 1) : null;
   const spottingToday = state.periods[today] === "spotting";
+  const noPeriodToday = Boolean(state.noPeriods?.[today]);
   let note = "Your body can feel a little different from day to day.";
   if (state.profile.sprintecStartDate) {
     note = spottingToday
       ? "Light spotting can happen while your body is getting used to Sprintec."
-      : "Your body is still getting used to Sprintec. You may feel completely normal today.";
-    if (predicted && Math.abs(diffDays(today, predicted)) <= 3) {
+      : noPeriodToday
+        ? "No period today. Sprintec can change or suppress the timing of periods."
+        : "Your body is still getting used to Sprintec. You may feel completely normal today.";
+    if (predicted && Math.abs(diffDays(today, predicted)) <= 3 && !noPeriodToday) {
       note = "This is around when your period used to arrive. Sprintec may change the timing, and light spotting can happen.";
     }
   }
