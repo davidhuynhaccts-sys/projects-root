@@ -30,23 +30,29 @@ export function periodStarts(periods: Record<string, PeriodKind>) {
   return dates.filter((d,i) => i === 0 || diffDays(dates[i-1], d) > 1);
 }
 
+function placeboWindowFromAnchor(anchor: string, today: string) {
+  if (today <= anchor) return anchor;
+  const elapsed = diffDays(anchor, today);
+  const cycles = Math.floor(elapsed / 28);
+  const currentStart = addDays(anchor, cycles * 28);
+  if (diffDays(currentStart, today) <= 6) return currentStart;
+  return addDays(currentStart, 28);
+}
+
 function nextPlaceboWeekStart(pillStart: string, today: string, modeChangedAt?: string) {
-  // If continuous mode was just turned off, preserve the current 21-active-pill
-  // position and schedule the next placebo week after that active pack ends.
+  // If continuous mode was turned off, finish the current 21-active-pill pack,
+  // then use that first placebo week as the new 28-day schedule anchor.
   if (modeChangedAt) {
     const activeDayAtSwitch = ((Math.max(0, diffDays(pillStart, modeChangedAt)) % 21) + 1);
     const firstPlacebo = addDays(modeChangedAt, 22 - activeDayAtSwitch);
-    if (today <= firstPlacebo) return firstPlacebo;
-    const elapsed = diffDays(firstPlacebo, today);
-    const cycles = Math.ceil(elapsed / 28);
-    return addDays(firstPlacebo, cycles * 28);
+    return placeboWindowFromAnchor(firstPlacebo, today);
   }
 
   // Standard 28-day packs: 21 active pills followed by 7 placebo days.
   const elapsed = Math.max(0, diffDays(pillStart, today));
   const cycleDay = elapsed % 28;
   if (cycleDay < 21) return addDays(today, 21 - cycleDay);
-  return addDays(today, 28 - cycleDay + 21);
+  return addDays(today, -(cycleDay - 21));
 }
 
 export function prediction(state: PebblesState) {
