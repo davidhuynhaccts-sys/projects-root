@@ -3,9 +3,20 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import "./pebbles.css";
 
-type PeriodKind = "period" | "spotting";
+type PeriodKind = "period" | "spotting" | "light" | "medium" | "heavy";
 type PillStatus = "taken" | "missed";
-type Profile = { name: string; birthday?: string; heightInches?: number; weightLb?: number; sprintecStartDate?: string };
+type MedicationHistoryItem = { name:string; startDate?:string; endDate?:string };
+type Profile = {
+  name: string;
+  birthday?: string;
+  heightInches?: number;
+  weightLb?: number;
+  sprintecStartDate?: string;
+  currentMedication?: string;
+  continuousPillMode?: boolean;
+  regimenModeChangedAt?: string;
+  medicationHistory?: MedicationHistoryItem[];
+};
 type PebblesState = {
   profile: Profile;
   periods: Record<string, PeriodKind>;
@@ -19,6 +30,10 @@ type Prediction = {
   cycleLengths: number[];
   averageCycleLength: number;
   predictedPeriodStart: string | null;
+  projectionIntervalDays: number | null;
+  predictedWindowDays: number;
+  continuousPillMode: boolean;
+  currentMedication: string;
   lastPoop: string | null;
   pillDay: number | null;
   pillTakenToday: boolean;
@@ -47,7 +62,7 @@ function fromIso(s: string) {
   return new Date(s + "T12:00:00");
 }
 function formatShort(s: string | null) {
-  if (!s) return "Not yet";
+  if (!s) return "Not scheduled";
   return fromIso(s).toLocaleDateString("en-US",{month:"short",day:"numeric"});
 }
 function daysBetween(a: string, b: string) {
@@ -79,10 +94,11 @@ function Month({
         const pill=state.pills[date];
         const poop=state.poops[date];
         const predicted=predictedDays.has(date) && !kind && !noPeriod;
+        const actualFlow=kind==="period"||kind==="light"||kind==="medium"||kind==="heavy";
         return <button
           className={[
             "day",
-            kind==="period"?"period":"",
+            actualFlow?"period":"",
             kind==="spotting"?"spotting":"",
             predicted?"predicted":"",
             date===today?"today":"",
@@ -145,7 +161,7 @@ export default function PebblesPage(){
     } finally { setSaving(false); }
   }
 
-  function patchDate(kind:"period"|"noPeriod"|"spotting"|"pill"|"poop", value:boolean){
+  function setBleeding(level:"none"|"spotting"|"light"|"medium"|"heavy"){
     if(!state||!selected)return;
     const next={
       ...state,
@@ -154,24 +170,22 @@ export default function PebblesPage(){
       pills:{...state.pills},
       poops:{...state.poops},
     };
-    if(kind==="period"){
-      if(value){
-        next.periods[selected]="period";
-        delete next.noPeriods[selected];
-      } else if(next.periods[selected]==="period") delete next.periods[selected];
-    }
-    if(kind==="noPeriod"){
-      if(value){
-        next.noPeriods[selected]=true;
-        delete next.periods[selected];
-      } else delete next.noPeriods[selected];
-    }
-    if(kind==="spotting"){
-      if(value){
-        next.periods[selected]="spotting";
-        delete next.noPeriods[selected];
-      } else if(next.periods[selected]==="spotting") delete next.periods[selected];
-    }
+    delete next.periods[selected];
+    delete next.noPeriods[selected];
+    if(level==="none") next.noPeriods[selected]=true;
+    else next.periods[selected]=level;
+    persist(next);
+  }
+
+  function patchDate(kind:"pill"|"poop", value:boolean){
+    if(!state||!selected)return;
+    const next={
+      ...state,
+      periods:{...state.periods},
+      noPeriods:{...(state.noPeriods||{})},
+      pills:{...state.pills},
+      poops:{...state.poops},
+    };
     if(kind==="pill"){
       if(value) next.pills[selected]="taken"; else delete next.pills[selected];
     }
@@ -184,12 +198,21 @@ export default function PebblesPage(){
   function saveProfile(e:FormEvent<HTMLFormElement>){
     e.preventDefault(); if(!state)return;
     const fd=new FormData(e.currentTarget);
+    const continuousPillMode=fd.get("continuousPillMode")==="on";
+    const wasContinuous=state.profile.continuousPillMode??true;
+    const currentMedication=String(fd.get("currentMedication")||"Mili");
+    const history=[...(state.profile.medicationHistory||[])];
+    if(!history.some(item=>item.name===currentMedication)) history.push({name:currentMedication,startDate:today});
     const next={...state,profile:{
       ...state.profile,
       birthday:String(fd.get("birthday")||"")||undefined,
       sprintecStartDate:String(fd.get("sprintecStartDate")||"")||undefined,
       heightInches:Number(fd.get("heightInches"))||undefined,
       weightLb:Number(fd.get("weightLb"))||undefined,
+      currentMedication,
+      continuousPillMode,
+      regimenModeChangedAt: wasContinuous&&!continuousPillMode ? today : continuousPillMode ? undefined : state.profile.regimenModeChangedAt,
+      medicationHistory:history,
     }};
     persist(next); setShowSettings(false);
   }
@@ -205,14 +228,15 @@ export default function PebblesPage(){
 
   const predictedDays=useMemo(()=>{
     const s=new Set<string>();
-    if(prediction?.predictedPeriodStart){
-      const cycle=Math.max(15,Math.round(prediction.averageCycleLength||28));
+    if(!prediction?.continuousPillMode && prediction?.predictedPeriodStart){
+      const interval=prediction.projectionIntervalDays||28;
+      const windowDays=prediction.predictedWindowDays||5;
       const horizon=new Date();
       horizon.setMonth(horizon.getMonth()+13);
       let start=prediction.predictedPeriodStart;
       while(fromIso(start)<=horizon){
-        for(let i=0;i<5;i++) s.add(addDays(start,i));
-        start=addDays(start,cycle);
+        for(let i=0;i<windowDays;i++) s.add(addDays(start,i));
+        start=addDays(start,interval);
       }
     }
     return s;
@@ -248,6 +272,7 @@ export default function PebblesPage(){
   const selectedPill=selected?state.pills[selected]:undefined;
   const selectedPoop=selected?state.poops[selected]:false;
   const poopAgo=prediction.lastPoop?daysBetween(prediction.lastPoop,today):null;
+  const medicationHistory=(state.profile.medicationHistory||[]).map(item=>item.name).filter((name,index,array)=>array.indexOf(name)===index).join(" → ");
 
   return <main className="shell" id="pebbles-top">
     <header className="topbar">
@@ -259,12 +284,18 @@ export default function PebblesPage(){
     </header>
 
     <section className="summary">
-      <div className="predictionLabel">Next period</div>
-      <div className="predictionDate">{formatShort(prediction.predictedPeriodStart)}</div>
-      {state.profile.sprintecStartDate&&<div className="predictionHint">Sprintec may change the timing</div>}
+      {prediction.continuousPillMode ? <>
+        <div className="predictionLabel">Continuous Pill Mode</div>
+        <div className="predictionDate">No scheduled period</div>
+        <div className="predictionHint">{prediction.currentMedication} • active pills only</div>
+      </> : <>
+        <div className="predictionLabel">Next period</div>
+        <div className="predictionDate">{formatShort(prediction.predictedPeriodStart)}</div>
+        <div className="predictionHint">Based on placebo week</div>
+      </>}
       <div className="todayGrid">
         <button className="quick pillQuick" onClick={()=>{setSelected(today);}}>
-          <span>Pill</span><strong>{state.pills[today]==="taken"?"Taken ✓":"Log today"}</strong>
+          <span>{prediction.currentMedication}</span><strong>{state.pills[today]==="taken"?"Taken ✓":"Log today"}</strong>
         </button>
         <button className="quick poopQuick" onClick={()=>{setSelected(today);}}>
           <span>Poop</span><strong>{poopAgo===0?"Today":poopAgo===1?"Yesterday":poopAgo!=null?`${poopAgo} days ago`:"Not logged"}</strong>
@@ -285,25 +316,31 @@ export default function PebblesPage(){
     {showTopJump&&<button
       className="topJump"
       onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}
-      aria-label="Go to next period"
-    ><span>↑</span> Next period</button>}
+      aria-label={prediction.continuousPillMode?"Go to continuous pill mode":"Go to next period"}
+    ><span>↑</span> {prediction.continuousPillMode?"Continuous mode":"Next period"}</button>}
 
     {selected&&<div className="overlay" onClick={()=>setSelected(null)}>
       <section className="sheet" onClick={e=>e.stopPropagation()}>
         <div className="grabber"/>
         <div className="sheetDate">{fromIso(selected).toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"})}</div>
         <div className="toggles">
-          <button className={selectedKind==="period"?"active periodToggle":""} onClick={()=>patchDate("period",selectedKind!=="period")}>
-            <span className="toggleDot periodDot"/>Period <b>{selectedKind==="period"?"✓":""}</b>
+          <button className={selectedNoPeriod?"active noPeriodToggle":""} onClick={()=>setBleeding("none")}>
+            <span className="toggleDot noPeriodDot"/>None <b>{selectedNoPeriod?"✓":""}</b>
           </button>
-          <button className={selectedNoPeriod?"active noPeriodToggle":""} onClick={()=>patchDate("noPeriod",!selectedNoPeriod)}>
-            <span className="toggleDot noPeriodDot"/>No period <b>{selectedNoPeriod?"✓":""}</b>
-          </button>
-          <button className={selectedKind==="spotting"?"active spottingToggle":""} onClick={()=>patchDate("spotting",selectedKind!=="spotting")}>
+          <button className={selectedKind==="spotting"?"active spottingToggle":""} onClick={()=>setBleeding("spotting")}>
             <span className="toggleDot spottingDot"/>Spotting <b>{selectedKind==="spotting"?"✓":""}</b>
           </button>
+          <button className={selectedKind==="light"?"active periodToggle":""} onClick={()=>setBleeding("light")}>
+            <span className="toggleDot periodDot"/>Light <b>{selectedKind==="light"?"✓":""}</b>
+          </button>
+          <button className={selectedKind==="medium"||selectedKind==="period"?"active periodToggle":""} onClick={()=>setBleeding("medium")}>
+            <span className="toggleDot periodDot"/>Medium <b>{selectedKind==="medium"||selectedKind==="period"?"✓":""}</b>
+          </button>
+          <button className={selectedKind==="heavy"?"active periodToggle":""} onClick={()=>setBleeding("heavy")}>
+            <span className="toggleDot periodDot"/>Heavy <b>{selectedKind==="heavy"?"✓":""}</b>
+          </button>
           <button className={selectedPill==="taken"?"active pillToggle":""} onClick={()=>patchDate("pill",selectedPill!=="taken")}>
-            <span className="toggleDot pillDot"/>Pill taken <b>{selectedPill==="taken"?"✓":""}</b>
+            <span className="toggleDot pillDot"/>{prediction.currentMedication} taken <b>{selectedPill==="taken"?"✓":""}</b>
           </button>
           <button className={selectedPoop?"active poopToggle":""} onClick={()=>patchDate("poop",!selectedPoop)}>
             <span className="toggleDot poopDot"/>Poop <b>{selectedPoop?"✓":""}</b>
@@ -319,7 +356,18 @@ export default function PebblesPage(){
         <h3>About Elly</h3>
         <form onSubmit={saveProfile}>
           <label>Birthday<input name="birthday" type="date" defaultValue={state.profile.birthday||""}/></label>
-          <label>Sprintec started<input name="sprintecStartDate" type="date" defaultValue={state.profile.sprintecStartDate||""}/></label>
+          <label>Birth control started<input name="sprintecStartDate" type="date" defaultValue={state.profile.sprintecStartDate||""}/></label>
+          <label>Current medication
+            <select name="currentMedication" defaultValue={state.profile.currentMedication||"Mili"}>
+              <option value="Mili">Mili</option>
+              <option value="Sprintec">Sprintec</option>
+            </select>
+          </label>
+          <label>
+            <span>Continuous pill mode</span>
+            <input name="continuousPillMode" type="checkbox" defaultChecked={state.profile.continuousPillMode??true}/>
+          </label>
+          {medicationHistory&&<label>Medication history<input disabled value={medicationHistory}/></label>}
           <div className="twoCols">
             <label>Height (in)<input name="heightInches" type="number" step="0.1" defaultValue={state.profile.heightInches||""}/></label>
             <label>Weight (lb)<input name="weightLb" type="number" step="0.1" defaultValue={state.profile.weightLb||""}/></label>
