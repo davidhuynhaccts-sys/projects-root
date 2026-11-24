@@ -298,3 +298,64 @@
 .huynh-app .deep-review-preview{margin:17px 0 20px;border-style:dashed}
 @media(max-width:760px){.huynh-app .tone-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:400px){.huynh-app .tone-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* The still itself is the prompt: no watermark, decorative tint, copy or attribution over the image. */
+.huynh-app .film-hero{
+ position:relative;display:block;width:100%;height:auto;aspect-ratio:16/9;
+ padding:0;margin:0;overflow:hidden;background:#080e17;
+ isolation:auto
+}
+.huynh-app .film-hero::before,.huynh-app .film-hero::after,.huynh-app .film-watermark{content:none;display:none!important}
+.huynh-app .film-still{
+ position:static;display:block;width:100%;height:100%;object-fit:contain;
+ object-position:center;filter:none;opacity:1;z-index:auto
+}
+.huynh-app .film-caption{
+ display:flex;align-items:flex-end;justify-content:space-between;gap:20px;
+ padding:23px 34px 24px;background:#172337;border-bottom:1px solid #344359
+}
+.huynh-app .film-caption-details{min-width:0}
+.huynh-app .film-caption h2{
+ font-family:'Playfair Display',Georgia,serif;font-weight:500;
+ font-size:clamp(27px,3.4vw,41px);letter-spacing:-.035em;line-height:1.16;
+ margin:7px 0 5px;color:#f5f8fd
+}
+.huynh-app .film-caption p{font-size:12px;color:#afbed2;margin:0}
+.huynh-app .film-caption .film-still-credit{
+ position:static;display:inline-block;flex-shrink:0;max-width:180px;
+ padding:0;margin:0;background:none;text-align:right;
+ text-shadow:none;opacity:1;font-size:11px;color:#aac9e1;
+ text-decoration:underline;text-underline-offset:3px
+}
+.huynh-app .film-caption .film-still-credit:hover{color:#fff}
+.huynh-app .film-tile{
+ display:flex;flex-direction:column;align-items:stretch;padding:0;overflow:hidden;
+ background:#141e2e;min-height:0;text-align:left
+}
+.huynh-app .film-tile::before{content:none;display:none}
+.huynh-app .film-tile-image{
+ display:block;position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;
+ flex-shrink:0;background:#070e18
+}
+.huynh-app .film-tile .film-tile-still{
+ position:static;display:block;width:100%;height:100%;
+ object-fit:cover;object-position:center;opacity:1;filter:none;transform:none
+}
+.huynh-app .film-tile:hover .film-tile-still{opacity:1;transform:scale(1.04)}
+.huynh-app .film-tile-meta{
+ display:flex;flex-direction:column;align-items:flex-start;flex:1;gap:5px;
+ width:100%;padding:13px 14px 12px
+}
+.huynh-app .film-tile-title{margin:0;line-height:1.25;font-size:19px}
+.huynh-app .film-tile .film-status{
+ margin-top:auto;padding-top:10px;border-top:1px solid #36435a;
+ width:100%;color:#a4b4c9
+}
+.huynh-app .film-tile .film-status.done{color:#a7dec5}
+@media(max-width:760px){
+ .huynh-app .film-hero{height:auto;padding:0;aspect-ratio:16/9}
+ .huynh-app .film-caption{padding:18px 20px;align-items:flex-start;gap:10px}
+ .huynh-app .film-caption h2{font-size:29px;max-width:none}
+ .huynh-app .film-caption .film-still-credit{font-size:10px;max-width:100px}
+ .huynh-app .film-tile-title{font-size:18px}
+}
