@@ -133,10 +133,22 @@ export function scoreProfile(answers:Record<string,FilmAnswer>,expanded=false):P
  const top=ranked[0]?.axis||"existential";
  const second=ranked[1]?.axis||top;
  const topFilms=points.filter(p=>p.evidence[AXES.indexOf(top)]).sort((a,b)=>b.vector[AXES.indexOf(top)]-a.vector[AXES.indexOf(top)]).slice(0,3).map(x=>x.title);
+ const reactionFilmCounts=new Map<string,number>();
+ for(const film of included){
+  const response=answers[film.id];
+  if(!response||response.status!=="watched"||!complete(response))continue;
+  // Count each reaction at most once per film, even if chosen for two aspects.
+  const seen=new Set(response.aspects.flatMap(item=>item.reactions||[]).filter(id=>id!=="unsure"&&id!=="didnt_resonate"));
+  for(const id of seen)reactionFilmCounts.set(id,(reactionFilmCounts.get(id)||0)+1);
+ }
+ const prominent=[...reactionFilmCounts].sort((a,b)=>b[1]-a[1])[0];
+ const reactionLabel=prominent?ASPECT_REACTIONS.find(r=>r.id===prominent[0])?.label:null;
+ const reactionInsight=prominent&&reactionLabel&&prominent[1]>=2?
+  " In "+prominent[1]+" different films, you selected \""+reactionLabel+"\" to describe how a particular detail affected you." : "";
  const titleWords:Record<Axis,string>={existential:"Reflective Explorer",moral:"Social Observer",emotional:"Empathetic Connector",artistic:"Creative Interpreter"};
  const headline=ranked.length?titleWords[top]:"Your constellation begins here";
  const narrative=ranked.length
- ? "Your completed film responses place the strongest emphasis on "+AXIS_LABELS[top].toLowerCase()+(ranked.length>1?", with "+AXIS_LABELS[second].toLowerCase()+" also present":"")+". These patterns describe what you engaged with across these films, not a fixed personality trait. "+(topFilms.length?"Films contributing examples include "+topFilms.join(", ")+". ":"")+(completed<included.length?"Your profile has missing film coverage and may change as you assess more films.":expanded?"You have assessed all twenty films.":"You have assessed all ten Core films.")
+ ? "Your completed film responses place the strongest emphasis on "+AXIS_LABELS[top].toLowerCase()+(ranked.length>1?", with "+AXIS_LABELS[second].toLowerCase()+" also present":"")+". These patterns describe what you engaged with across these films, not a fixed personality trait. "+(topFilms.length?"Films contributing examples include "+topFilms.join(", ")+". ":"")+reactionInsight+(completed<included.length?"Your profile has missing film coverage and may change as you assess more films.":expanded?"You have assessed all twenty films.":"You have assessed all ten Core films.")
  : completed?"You completed films but marked their scoring questions as uncertain. Your responses are saved, but there is not yet enough evidence for orientation scores.":"Complete a familiar movie to begin an exploratory Movie Personality Profile. There are no correct tastes or interpretations.";
  const centroid:[number,number,number]|null=points.length?[
   ...([0,1,2].map(i=>+(points.reduce((sum,p)=>sum+p.point[i],0)/points.length).toFixed(4)) as [number,number,number])
