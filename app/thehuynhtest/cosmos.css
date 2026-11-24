@@ -399,3 +399,130 @@
 @media(prefers-reduced-motion:reduce){
  .cosmos-space-surface{will-change:auto!important;transform:none!important}
 }
+
+
+/* Constellation-first reveal: the profile name is the signature at the bottom
+   of the immersive visualization; the long-form MPP follows below the fold. */
+.cosmos-space-page{position:relative;min-height:0;height:100vh;height:100dvh}
+.cosmos-profile-threshold{
+ position:absolute;z-index:9;bottom:0;left:0;right:0;
+ display:flex;align-items:center;justify-content:space-between;gap:22px;flex-wrap:wrap;
+ min-height:122px;width:100%;padding:20px max(28px,calc((100vw - 1150px)/2));
+ text-align:left;color:#f2f8ff;background:
+ linear-gradient(0deg,rgba(8,19,37,.98) 2%,rgba(10,25,47,.94) 58%,rgba(10,25,47,.08) 100%);
+ border:0;border-top:1px solid rgba(161,198,225,.18);
+ box-shadow:0 -12px 40px #02081633;
+ backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+ cursor:pointer
+}
+.cosmos-profile-threshold:hover{background:linear-gradient(0deg,#0e2b49 0%,rgba(13,35,60,.92) 70%,rgba(10,25,47,.07) 100%)}
+.cosmos-threshold-overline{
+ display:block;width:100%;font-size:10px;letter-spacing:.17em;
+ font-weight:800;color:#a4d4f2;margin-bottom:-9px
+}
+.cosmos-threshold-name{
+ font:400 clamp(27px,3.7vw,49px)/1.03 'Playfair Display',Georgia,serif;
+ letter-spacing:-.035em;max-width:min(750px,75vw);
+ text-wrap:balance;color:#f3f9ff
+}
+.cosmos-threshold-invitation{
+ display:inline-flex;align-items:center;gap:10px;flex-shrink:0;
+ font-size:12px;font-weight:700;letter-spacing:.02em;
+ color:#c3e1f5;padding:9px 12px;border:1px solid #557c9e;
+ border-radius:100px;background:rgba(33,67,98,.38)
+}
+.cosmos-threshold-invitation span{font-size:20px;line-height:1}
+.cosmos-threshold-invitation:hover{background:#2d577d}
+.cosmos-space-page .cosmos-bottom-hud{bottom:148px}
+.cosmos-space-page .cosmos-small-print{display:none}
+.cosmos-story-header{z-index:22}
+.cosmos-story-hero h1{max-width:900px}
+.cosmos-portrait-intro{display:grid;grid-template-columns:1fr 1fr;gap:28px;max-width:1050px;margin-top:45px}
+.cosmos-portrait-intro p{
+ font-size:16px!important;line-height:1.95!important;color:#c6d7e6!important;margin:0
+}
+.cosmos-story-personality .cosmos-story-section-head{margin-bottom:26px}
+.cosmos-story-longform{
+ max-width:900px;margin:24px 0 0;padding:8px 0 0;
+ color:#cfdeed;font-size:16px;line-height:1.95
+}
+.cosmos-story-longform>p{font-size:16px!important;line-height:1.95!important;color:#c5d7e8!important;margin:21px 0}
+.cosmos-story-chapter-tag{letter-spacing:.16em;font-weight:800;color:#93c5e6;font-size:10px;margin-bottom:20px}
+.cosmos-story-chapter-lede{
+ font:400 clamp(21px,2.6vw,30px)/1.62 'Playfair Display',Georgia,serif!important;
+ letter-spacing:-.014em;color:#ecf4ff!important;max-width:870px
+}
+.cosmos-story-secondary-insight{
+ border-left:2px solid #88b9d9;background:linear-gradient(90deg,#213d5b65,transparent);
+ padding:19px 23px;margin:32px 0
+}
+.cosmos-story-secondary-insight>strong{font-size:11px;letter-spacing:.12em;color:#b8dff6}
+.cosmos-story-secondary-insight>p{font-size:15px;line-height:1.8;color:#c2d5e6}
+.cosmos-story-reflection{margin:40px 0 0;border-top:1px solid #43617d;padding-top:23px}
+.cosmos-story-reflection>span{font-size:10px;letter-spacing:.16em;color:#95c8e5;font-weight:800}
+.cosmos-story-reflection>p{font:italic 400 23px/1.6 'Playfair Display',Georgia,serif;color:#e9f4fd}
+.cosmos-story-axis p.cosmos-story-axis-nuance{font-size:12px!important;color:#93b1ca!important;margin-top:12px}
+.cosmos-story-reaction-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px
+}
+.cosmos-story-reaction-grid article{
+ background:linear-gradient(143deg,#1e3654,#111e32);
+ padding:30px;border:1px solid #3c5775;border-radius:17px
+}
+.cosmos-story-reaction-grid article>span{font-size:10px;letter-spacing:.13em;color:#9fc6e4;font-weight:800}
+.cosmos-story-reaction-grid h3{font:400 29px/1.2 'Playfair Display',Georgia,serif;margin:17px 0}
+.cosmos-story-reaction-grid p{font-size:13px;line-height:1.83;color:#bbcede}
+.cosmos-story-reaction-grid article>div{display:flex;gap:7px;flex-wrap:wrap;margin-top:20px}
+.cosmos-story-reaction-grid article>div span{font-size:11px;border:1px solid #55718b;border-radius:100px;padding:6px 10px;color:#cadff1}
+.cosmos-story-film-pattern{border-top:1px solid #3b5770;margin-top:39px;padding-top:28px}
+.cosmos-story-film-pattern>h3{font:400 27px/1.3 'Playfair Display',Georgia,serif;color:#e9f3ff}
+.cosmos-story-lenses{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 36px}
+.cosmos-story-lens{display:flex;gap:15px;padding:20px 5px;border-top:1px solid #3e5770}
+.cosmos-story-lens>span{font:400 27px Georgia,serif;color:#8aaec9;flex:0 0 34px}
+.cosmos-story-lens h3{font-size:16px;color:#e9f3ff;margin:2px 0 8px}
+.cosmos-story-lens p{font-size:13px;color:#b8cdde;line-height:1.8;margin:0}
+.cosmos-story-closing>p{max-width:840px;font-size:15px!important;line-height:1.9!important;color:#c2d4e5!important;margin-bottom:24px}
+@media(max-width:1130px){
+ .cosmos-profile-threshold{padding-left:23px;padding-right:23px}
+}
+@media(max-width:780px){
+ .cosmos-profile-threshold{
+  min-height:115px;padding:16px 18px 17px;gap:9px;
+  border-top-color:rgba(143,184,216,.23)
+ }
+ .cosmos-threshold-overline{font-size:9px;letter-spacing:.14em;margin-bottom:-3px}
+ .cosmos-threshold-name{max-width:100%;font-size:clamp(28px,7vw,39px);line-height:1.1}
+ .cosmos-threshold-invitation{
+  width:100%;justify-content:space-between;
+  border:0;background:none;padding:0;
+  color:#abd1eb;font-size:11px
+ }
+ .cosmos-threshold-invitation:hover{background:none}
+ .cosmos-space-page .cosmos-bottom-hud{bottom:149px}
+ .cosmos-space-page .cosmos-right-tools{bottom:178px}
+ .cosmos-space-page .cosmos-bottom-left{bottom:50px}
+ .cosmos-story-hero{padding-top:54px}
+ .cosmos-portrait-intro{grid-template-columns:1fr;gap:14px;margin-top:28px}
+ .cosmos-portrait-intro p{font-size:14px!important;line-height:1.85!important}
+ .cosmos-story-chapter-lede{font-size:22px!important;line-height:1.65!important}
+ .cosmos-story-longform>p{font-size:14px!important;line-height:1.85!important}
+ .cosmos-story-longform{font-size:14px}
+ .cosmos-story-reflection>p{font-size:20px}
+ .cosmos-story-secondary-insight{padding:13px 17px}
+ .cosmos-story-secondary-insight>p{font-size:14px}
+ .cosmos-story-axis p.cosmos-story-axis-nuance{font-size:12px!important}
+ .cosmos-story-reaction-grid,.cosmos-story-lenses{grid-template-columns:1fr}
+ .cosmos-story-reaction-grid article{padding:22px}
+ .cosmos-story-reaction-grid h3{font-size:25px}
+ .cosmos-story-lens{padding:18px 0}
+ .cosmos-story-section-head h2{font-size:clamp(34px,9vw,42px)}
+}
+@media(max-width:390px){
+ .cosmos-profile-threshold{min-height:123px}
+ .cosmos-threshold-name{font-size:28px}
+ .cosmos-space-page .cosmos-bottom-hud{bottom:156px}
+ .cosmos-space-page .cosmos-right-tools{bottom:181px}
+}
+@media(prefers-reduced-motion:reduce){
+ .cosmos-space-surface{transform:none!important;opacity:1!important}
+}

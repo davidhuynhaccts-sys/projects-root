@@ -75,18 +75,18 @@ export default function Constellation({people,onClose,onShare,initialMode}:Props
  const [notice,setNotice]=useState("");
  const tourRef=useRef(0);
  const scrollRef=useRef<HTMLDivElement>(null),storyRef=useRef<HTMLElement>(null),surfaceRef=useRef<HTMLDivElement>(null);
- const scrollToStory=useCallback(()=>{scrollRef.current?.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});},[]);
- const scrollToStars=useCallback(()=>{scrollRef.current?.scrollTo({top:storyRef.current?.offsetHeight||scrollRef.current.clientHeight,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});},[]);
+ const scrollToStory=useCallback(()=>{scrollRef.current?.scrollTo({top:storyRef.current?.offsetTop||scrollRef.current.clientHeight,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});},[]);
+ const scrollToStars=useCallback(()=>{scrollRef.current?.scrollTo({top:0,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});},[]);
  useLayoutEffect(()=>{
-  const scroll=scrollRef.current,story=storyRef.current,surface=surfaceRef.current;
-  if(!scroll||!story||!surface)return;
-  // Begin at the full-screen constellation. The complete MPP is directly above.
-  scroll.scrollTop=story.offsetHeight;
+  const scroll=scrollRef.current,surface=surfaceRef.current;
+  if(!scroll||!surface)return;
+  // The constellation opens first. The complete MPP follows below it.
+  scroll.scrollTop=0;
   const update=()=>{
-   const visible=Math.max(0,Math.min(1,(story.offsetHeight-scroll.scrollTop)/Math.max(1,scroll.clientHeight)));
+   const leaving=Math.max(0,Math.min(1,scroll.scrollTop/Math.max(1,scroll.clientHeight)));
    const reduced=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-   surface.style.transform=reduced?"none":"scale("+(1-visible*.095).toFixed(4)+")";
-   surface.style.opacity=String(1-visible*.20);
+   surface.style.transform=reduced?"none":"scale("+(1-leaving*.075).toFixed(4)+")";
+   surface.style.opacity=String(1-leaving*.18);
   };
   update();scroll.addEventListener("scroll",update,{passive:true});
   return()=>scroll.removeEventListener("scroll",update);
@@ -148,10 +148,7 @@ export default function Constellation({people,onClose,onShare,initialMode}:Props
   return profile.points.map(f=>({film:f,d:distance(f.point,profile.centroid!)}))
    .sort((a,b)=>b.d-a.d).slice(0,2);
  },[people]);
- return <div className="cosmos-portal cosmos-scrollable" ref={scrollRef} role="dialog" aria-modal="true" aria-label="Emotional Constellation and complete Movie Personality Profile">
-  <section className="cosmos-mpp-page" ref={storyRef} aria-label="Full Movie Personality Profile">
-   <ConstellationProfile people={people} onReturn={scrollToStars} onClose={onClose} onFilm={id=>{setMode("constellation");setSelected((people[0]?.id||"self")+":"+id);scrollToStars();}}/>
-  </section>
+ return <div className="cosmos-portal cosmos-scrollable" ref={scrollRef} role="dialog" aria-modal="true" aria-label="Emotional Constellation followed by a complete Movie Personality Profile">
   <section className="cosmos-space-page" aria-label="Interactive full-screen Emotional Constellation">
    <div className="cosmos-space-surface" ref={surfaceRef}>
   <div className="cosmos-aura" aria-hidden="true"/>
@@ -160,7 +157,7 @@ export default function Constellation({people,onClose,onShare,initialMode}:Props
    onSelect={key=>{if(key?.startsWith("centroid:")){setSelected(null);scrollToStory();}else setSelected(key);setTour(false);}} onHover={setHovered} command={command}/>
   <header className="cosmos-header">
    <div className="cosmos-ident"><span className="cosmos-symbol">✧</span><div><span className="cosmos-brand">THE HUYNH TEST</span><h1>Emotional <em>Constellation</em></h1></div></div>
-   <div className="cosmos-header-right"><button className="cosmos-top-action cosmos-read-mpp" type="button" onClick={scrollToStory}>↑ Read MPP</button><span className="cosmos-version">{summary?.stage==="expanded"?"EXPANDED":"CORE"} PROFILE · {summary?.completed||0} FILMS</span>
+   <div className="cosmos-header-right"><span className="cosmos-version">{summary?.stage==="expanded"?"EXPANDED":"CORE"} PROFILE · {summary?.completed||0} FILMS</span>
     {onShare?<button type="button" className="cosmos-top-action" onClick={onShare}>↗ Share</button>:null}
     <button className="cosmos-close" type="button" onClick={()=>onClose?.()} aria-label="Return to Movie Personality Profile">✕ <span>Close</span></button>
    </div>
@@ -204,7 +201,6 @@ export default function Constellation({people,onClose,onShare,initialMode}:Props
   <div className="cosmos-bottom-hud">
    <div className="cosmos-bottom-left">
     <div className="cosmos-count"><strong>{filtered.length}</strong> visible film responses <span>· {present.length} {present.length===1?"person":"people"}</span></div>
-    <button type="button" className="cosmos-profile-scroll-link" onClick={scrollToStory}>↑ Scroll up for your complete MPP</button>
     <button className="cosmos-guide-trigger" onClick={()=>setShowGuide(s=>!s)}>{showGuide?"Hide guide":"What am I looking at?"}</button>
     {showGuide?<div className="cosmos-guide"><strong>Reading your constellation</strong>
      <p>The four orientations are condensed mathematically into three visible dimensions. Left/right contrasts Artistic with Existential engagement; up/down contrasts Emotional with Moral engagement; depth combines separate ratings and emotional tones.</p>
@@ -219,8 +215,16 @@ export default function Constellation({people,onClose,onShare,initialMode}:Props
    </div>
   </div>
   {notice?<div className="cosmos-toast" role="status">{notice}</div>:null}
-  <div className="cosmos-small-print">SWIPE UP THE PAGE FOR YOUR FULL MPP · DRAG HORIZONTALLY TO ROTATE · USE + / − TO ZOOM · PROVISIONAL MODEL</div>
+  <button type="button" className="cosmos-profile-threshold" onClick={scrollToStory} aria-label={"Explore your full Movie Personality Profile: "+(summary?.headline||"Your cinematic portrait")}>
+    <span className="cosmos-threshold-overline">YOUR MOVIE PERSONALITY PROFILE</span>
+    <span className="cosmos-threshold-name">{summary?.headline||"Your cinematic portrait"}</span>
+    <span className="cosmos-threshold-invitation">Explore your profile <span aria-hidden="true">↓</span></span>
+  </button>
+  <div className="cosmos-small-print">DRAG TO EXPLORE · USE + / − TO ZOOM · SWIPE UP TO CONTINUE</div>
    </div>
+  </section>
+  <section className="cosmos-mpp-page" ref={storyRef} aria-label="Full Movie Personality Profile">
+   <ConstellationProfile people={people} onReturn={scrollToStars} onClose={onClose} onFilm={id=>{setMode("constellation");setSelected((people[0]?.id||"self")+":"+id);scrollToStars();}}/>
   </section>
  </div>;
 }
