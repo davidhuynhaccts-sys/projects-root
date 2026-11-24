@@ -2,7 +2,7 @@ import { FILMS,CORE_FILMS,AXES,AXIS_LABELS,TONES,ASPECT_REACTIONS,LEGACY_TONE_LA
 export type AnswerStatus = "watched" | "unwatched" | "unfamiliar";
 export type AspectAnswer = { id:string; valence:number|"mixed"|"unsure"|null; reactions:string[] };
 export type FilmAnswer = { status:AnswerStatus; rating:number|null; tone:string|null; tones:string[]; sliders:(number|null)[]; aspects:AspectAnswer[]; updatedAt?:number };
-export type FilmPoint = {filmId:string;title:string;rating:number;tone:string;tones:string[];vector:[number,number,number,number];point:[number,number,number];selectedAspects:string[];mixed:boolean;evidence:[boolean,boolean,boolean,boolean]};
+export type FilmPoint = {filmId:string;title:string;rating:number;tone:string;tones:string[];vector:[number,number,number,number];point:[number,number,number];selectedAspects:string[];aspectReactions?:{id:string;reactions:string[]}[];mixed:boolean;evidence:[boolean,boolean,boolean,boolean]};
 export type Profile = {version:string;stage:"core"|"expanded";completed:number;skipped:number;total:number;incomplete:boolean;orientationScores:Record<Axis,number|null>;points:FilmPoint[];centroid:[number,number,number]|null;headline:string;narrative:string;topFilms:string[];coveredOrientations:Axis[]};
 export const EMPTY_ANSWER:FilmAnswer={status:"watched",rating:null,tone:null,tones:[],sliders:[null,null,null,null,null],aspects:[]};
 export function freshAnswer():FilmAnswer { return {status:"watched",rating:null,tone:null,tones:[],sliders:[null,null,null,null,null],aspects:[]}; }
@@ -111,7 +111,7 @@ function scoreFilm(film:Film,a:FilmAnswer):FilmPoint|null {
  const opinion=weightedOpinion/weight;
  const base=project(vector);
  const point:[number,number,number]=[base[0],base[1],+opinion.toFixed(4)];
- return {filmId:film.id,title:film.title,rating:a.rating||3,tone:a.tone||"unsure",tones,vector,point,selectedAspects:a.aspects.map(x=>x.id),mixed:hasMixed,evidence};
+ return {filmId:film.id,title:film.title,rating:a.rating||3,tone:a.tone||"unsure",tones,vector,point,selectedAspects:a.aspects.map(x=>x.id),aspectReactions:a.aspects.filter(x=>x.id!=="unsure").map(x=>({id:x.id,reactions:x.reactions||[]})),mixed:hasMixed,evidence};
 }
 export function scoreProfile(answers:Record<string,FilmAnswer>,expanded=false):Profile {
  const stage=expanded?"expanded":"core";

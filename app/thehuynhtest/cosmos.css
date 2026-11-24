@@ -1,0 +1,231 @@
+/* The Huynh Test | Emotional Constellation immersive gallery */
+.cosmos-portal{
+ position:fixed;inset:0;z-index:10000;height:100vh;height:100dvh;min-width:320px;
+ color:#f3f5ff;overflow:hidden;isolation:isolate;
+ font-family:'DM Sans',ui-sans-serif,system-ui,sans-serif;
+ background:radial-gradient(ellipse 68% 65% at 46% 52%,#1a2d4e 0%,#0d1932 47%,#080d1a 92%);
+}
+.cosmos-portal *, .cosmos-portal *::before,.cosmos-portal *::after{box-sizing:border-box}
+.cosmos-portal button,.cosmos-portal select{font:inherit}
+.cosmos-portal button{cursor:pointer}
+.cosmos-portal button:disabled{cursor:not-allowed;opacity:.38}
+.cosmos-portal button:focus-visible,.cosmos-portal select:focus-visible,.cosmos-portal a:focus-visible{outline:2px solid #bbdffb;outline-offset:4px}
+.cosmos-portal .cosmos-aura{
+ position:absolute;inset:-20%;z-index:0;pointer-events:none;
+ background:radial-gradient(ellipse 25% 28% at 31% 30%,#2f4d7950,transparent 80%),
+ radial-gradient(ellipse 26% 24% at 68% 60%,#60537a31,transparent 85%),
+ radial-gradient(ellipse 30% 29% at 55% 85%,#1b667b26,transparent 78%);
+ animation:cosmos-nebula 26s ease-in-out infinite alternate;
+}
+@keyframes cosmos-nebula{from{transform:translate3d(-2%,-1%,0) scale(.98)}to{transform:translate3d(2%,1%,0) scale(1.06)}}
+.cosmos-stage,.cosmos-fallback{position:absolute;inset:0;z-index:1}
+.cosmos-canvas{display:block;width:100%;height:100%;outline:none;touch-action:none}
+.cosmos-star-labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.cosmos-star-label{
+ position:absolute;left:0;top:0;pointer-events:auto;white-space:nowrap;
+ border:0;background:rgba(8,17,32,.5);border-radius:5px;
+ padding:3px 6px;font-size:10px!important;font-weight:700;
+ letter-spacing:.025em;text-shadow:0 1px 8px #040b16;
+ transform-origin:left top;box-shadow:0 0 0 1px rgba(113,162,205,.1);
+}
+.cosmos-star-label:hover{background:#1b3656;color:#fff!important;z-index:20!important}
+.cosmos-header,.cosmos-mode-tabs,.cosmos-left-tools,.cosmos-right-tools,.cosmos-bottom-hud,.cosmos-small-print,.cosmos-hover-hint,.cosmos-toast{position:absolute;z-index:3}
+.cosmos-header{
+ top:0;left:0;right:0;height:91px;
+ display:flex;justify-content:space-between;align-items:center;gap:16px;
+ padding:14px 31px 12px;
+ background:linear-gradient(180deg,rgba(6,11,23,.9),rgba(6,11,23,.4) 75%,transparent);
+ pointer-events:none
+}
+.cosmos-header button,.cosmos-header a{pointer-events:auto}
+.cosmos-ident{display:flex;align-items:center;gap:15px;min-width:0}
+.cosmos-symbol{font-size:39px;line-height:1;color:#b6dafa;text-shadow:0 0 30px #78aad1}
+.cosmos-brand{font-size:9px;font-weight:800;letter-spacing:.22em;color:#aabed4;display:block;margin:0 0 3px}
+.cosmos-ident h1{font-family:'Playfair Display',Georgia,serif;font-weight:400;font-size:clamp(26px,2.5vw,38px);line-height:1.05;margin:0;letter-spacing:-.035em;white-space:nowrap}
+.cosmos-ident h1 em{color:#c0dff5;font-style:italic}
+.cosmos-header-right{display:flex;align-items:center;gap:10px}
+.cosmos-version{font-size:9px;letter-spacing:.12em;font-weight:700;color:#b1c2d4;white-space:nowrap;margin-right:6px}
+.cosmos-top-action,.cosmos-close,.cosmos-camera-controls button,.cosmos-bottom-actions button,.cosmos-guide-trigger{
+ border:1px solid rgba(152,185,214,.26);background:rgba(13,26,45,.66);
+ color:#dcebf9;border-radius:11px;box-shadow:0 4px 18px #02071022
+}
+.cosmos-top-action,.cosmos-close{min-height:39px;padding:8px 13px;font-size:12px;font-weight:700;white-space:nowrap}
+.cosmos-close:hover,.cosmos-top-action:hover,.cosmos-camera-controls button:hover,.cosmos-bottom-actions button:hover,.cosmos-guide-trigger:hover{background:rgba(51,83,116,.8);border-color:#9dcbe9}
+.cosmos-close{display:flex;gap:8px;align-items:center}
+.cosmos-mode-tabs{
+ top:100px;left:50%;transform:translateX(-50%);display:flex;gap:4px;
+ border:1px solid rgba(127,160,191,.25);border-radius:100px;
+ padding:5px;background:rgba(13,23,41,.79);backdrop-filter:blur(23px);
+ box-shadow:0 10px 35px #03091645
+}
+.cosmos-mode-tabs button{
+ border:0;background:none;color:#a4bad1;border-radius:100px;
+ padding:10px 17px;font-size:11px;letter-spacing:.025em;font-weight:700;white-space:nowrap
+}
+.cosmos-mode-tabs button.active{color:#081526;background:#c5e2f4;box-shadow:0 2px 12px #a5cfee38}
+.cosmos-mode-tabs button:hover:not(.active){background:#2c4562;color:white}
+.cosmos-left-tools{left:23px;top:176px;width:266px;max-height:calc(100dvh - 330px);display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.cosmos-left-tools>*{pointer-events:auto}
+.cosmos-right-tools{
+ right:23px;top:165px;width:302px;max-height:calc(100dvh - 300px);
+ display:flex;flex-direction:column;gap:13px;pointer-events:none
+}
+.cosmos-right-tools>*{pointer-events:auto}
+.cosmos-glass{
+ border:1px solid rgba(155,186,217,.20);
+ background:linear-gradient(145deg,rgba(20,35,60,.83),rgba(11,20,37,.84));
+ box-shadow:0 16px 62px rgba(3,8,20,.27),inset 0 1px 0 rgba(213,238,255,.05);
+ border-radius:18px;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px)
+}
+.cosmos-intro-panel{padding:22px}
+.cosmos-kicker{font-size:9px;color:#aac9df;letter-spacing:.17em;font-weight:800;margin-bottom:11px}
+.cosmos-intro-panel h2,.cosmos-insights h2{
+ font-family:'Playfair Display',Georgia,serif;font-size:28px;line-height:1.14;
+ font-weight:400;letter-spacing:-.03em;margin:0 0 12px;color:#f4f8ff
+}
+.cosmos-intro-panel p,.cosmos-insights p,.cosmos-detail-section p{
+ color:#9eb5cb;line-height:1.66;font-size:12px;margin:0 0 10px
+}
+.cosmos-person-key{margin-top:19px;padding-top:13px;border-top:1px solid rgba(151,184,210,.19);max-height:145px;overflow:auto}
+.cosmos-person-key label{display:flex;align-items:center;gap:8px;padding:6px 0;color:#dce9f9;font-size:11px;cursor:pointer}
+.cosmos-person-key label.muted{opacity:.48}
+.cosmos-person-key input{width:13px;height:13px;accent-color:#abcfe8;margin:0}
+.cosmos-person-key i{height:9px;width:9px;border-radius:50%;flex:0 0 9px;box-shadow:0 0 9px currentColor}
+.cosmos-person-key span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.cosmos-person-key small{color:#879fb8;font-size:9px}
+.cosmos-filter-panel{overflow:auto;max-height:40dvh}
+.cosmos-panel-toggle{background:transparent;border:0;width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 18px;color:#d5e8f5;font-size:11px;font-weight:750}
+.cosmos-filter-fields{padding:2px 18px 18px;display:flex;flex-direction:column;gap:11px}
+.cosmos-filter-fields label,.cosmos-film-picker label{display:flex;flex-direction:column;gap:6px;color:#b8cbe2;font-size:10px;font-weight:700}
+.cosmos-filter-fields select,.cosmos-film-picker select{
+ appearance:none;color:#e6f0fc;border:1px solid #4b6785;border-radius:9px;background:#1c314c;
+ padding:9px 10px;max-width:100%;font-size:11px
+}
+.cosmos-filter-fields .cosmos-checkbox-row{display:flex;flex-direction:row;align-items:center;gap:8px;font-size:11px}
+.cosmos-checkbox-row input{accent-color:#9acbe9}
+.cosmos-filter-fields .cosmos-ghost{
+ background:rgba(49,76,101,.3);border:1px solid rgba(165,193,217,.2);
+ padding:9px;border-radius:9px;color:#dbe9f6;font-size:11px
+}
+.cosmos-camera-controls{display:flex;gap:7px;align-self:flex-end}
+.cosmos-camera-controls button{width:39px;height:39px;font-size:21px;line-height:1}
+.cosmos-details-panel{
+ padding:0;overflow:hidden;display:flex;flex-direction:column;
+ max-height:calc(100dvh - 310px)
+}
+.cosmos-film-detail,.cosmos-insights{padding:22px;overflow:auto;min-height:0;overscroll-behavior:contain}
+.cosmos-detail-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cosmos-detail-heading button{border:1px solid #425a76;border-radius:7px;background:#213652;color:#e1edfb;width:28px;height:28px;font-size:12px}
+.cosmos-film-detail .cosmos-still{
+ width:100%;aspect-ratio:16/9;background:#060f1b;border-radius:10px;
+ margin:8px 0 0;overflow:hidden
+}
+.cosmos-film-detail .cosmos-still img{width:100%;height:100%;object-fit:contain;display:block}
+.cosmos-film-detail .cosmos-source{color:#96bbd7;text-decoration:underline;font-size:9px;display:block;margin:6px 0 13px;text-align:right}
+.cosmos-film-detail h2{font-family:'Playfair Display',Georgia,serif;font-weight:450;font-size:27px;line-height:1.12;margin:8px 0 10px}
+.cosmos-film-person{display:flex;align-items:center;gap:8px;color:#b6cddd;font-size:11px}
+.cosmos-film-person span{width:9px;height:9px;border-radius:50%}
+.cosmos-review-line{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.cosmos-review-line>span{font-size:10px;color:#9db1c6}
+.cosmos-review-line .cosmos-rating{border-radius:100px;padding:6px 10px;border:1px solid #456585;background:#263d59;color:#dff2ff;font-weight:700}
+.cosmos-detail-section{padding:17px 0 3px;border-top:1px solid #374b62;margin-top:8px}
+.cosmos-detail-section h3,.cosmos-compare-insights h3{font-size:11px;letter-spacing:.09em;color:#c6dcf0;text-transform:uppercase;margin:0 0 12px}
+.cosmos-chips{display:flex;flex-wrap:wrap;gap:6px}
+.cosmos-chips span{font-size:10px;padding:6px 9px;color:#c8def0;border:1px solid #49607b;border-radius:30px;background:#213651}
+.cosmos-aspect-entry{margin-bottom:14px}
+.cosmos-aspect-entry strong{display:block;color:#f1f6fd;font-size:12px;font-weight:600;margin:0 0 8px}
+.cosmos-axis-score{margin:13px 0}
+.cosmos-axis-score>div:first-child{display:flex;justify-content:space-between;gap:8px;font-size:10px;color:#b8cbdf;margin-bottom:7px}
+.cosmos-axis-score>div:first-child span:last-child{color:#e6f0fa;font-weight:700}
+.cosmos-track{height:5px;border-radius:5px;overflow:hidden;background:#273954}
+.cosmos-track>span{display:block;height:100%;border-radius:5px;background:#b2dbef}
+.cosmos-insights h2{font-size:30px;margin:7px 0 14px}
+.cosmos-insights p{font-size:11px;line-height:1.65}
+.cosmos-compare-insights{border-top:1px solid #354b67;margin-top:18px;padding-top:16px}
+.cosmos-compare-insights>div{margin-bottom:13px}
+.cosmos-compare-insights strong{font-size:11px;color:#e6eef9}
+.cosmos-film-picker{margin-top:15px}
+.cosmos-film-picker select{width:100%}
+.cosmos-hover-hint{bottom:126px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid #476283;border-radius:100px;background:#10243cdd;backdrop-filter:blur(12px);font-size:11px;color:#fff;white-space:nowrap;max-width:85vw}
+.cosmos-hover-hint>span{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cosmos-hover-hint small{color:#a2b9ce}
+.cosmos-bottom-hud{
+ bottom:38px;left:26px;right:26px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;pointer-events:none
+}
+.cosmos-bottom-hud>*{pointer-events:auto}
+.cosmos-count{color:#bbcede;font-size:12px}
+.cosmos-count strong{font-size:25px;color:#fff;font-family:'Playfair Display',Georgia,serif;font-weight:400;margin-right:5px}
+.cosmos-count span{color:#88a0b8}
+.cosmos-guide-trigger{margin-top:8px;padding:8px 13px;font-size:10px}
+.cosmos-guide{position:absolute;bottom:105px;left:0;width:min(360px,85vw);background:#14253add;border:1px solid #547491;border-radius:13px;padding:18px;backdrop-filter:blur(25px);box-shadow:0 10px 30px #03081788}
+.cosmos-guide strong{font-size:13px}
+.cosmos-guide p{font-size:11px;line-height:1.65;color:#b2c7db}
+.cosmos-guide p:last-child{margin-bottom:0}
+.cosmos-bottom-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px;max-width:610px}
+.cosmos-bottom-actions button{padding:10px 12px;font-size:11px;white-space:nowrap}
+.cosmos-bottom-actions button.active{background:#284766;border-color:#79aecf;color:#eff8ff}
+.cosmos-small-print{bottom:10px;left:50%;transform:translateX(-50%);white-space:nowrap;text-align:center;font-size:8px;color:#7f96ad;letter-spacing:.13em;text-shadow:0 1px 6px #060a16}
+.cosmos-toast{bottom:150px;left:50%;transform:translateX(-50%);border:1px solid #c69b9b;padding:12px 18px;border-radius:10px;background:#44242acc;color:#ffe9e9;font-size:12px}
+.cosmos-loading-scene{position:absolute;inset:0;display:grid;place-items:center;font-family:'Playfair Display',Georgia,serif;color:#b9cde1;font-size:25px}
+.cosmos-fallback svg{display:block;width:100%;height:100%}
+.cosmos-fallback-note{position:absolute;bottom:150px;left:50%;transform:translateX(-50%);font-size:12px;background:#12243b;padding:11px 16px;border-radius:10px;color:#c5d9ed;max-width:80vw;text-align:center}
+.huynh-app .cosmos-launch{display:flex;margin:15px 0 22px;align-items:center;gap:8px;font-size:14px!important;padding:17px 23px;border-radius:12px}
+@media(prefers-reduced-motion:reduce){.cosmos-portal .cosmos-aura{animation:none}}
+@media(max-width:1130px){
+ .cosmos-intro-panel{padding:17px}
+ .cosmos-left-tools{width:225px;left:14px}
+ .cosmos-right-tools{width:265px;right:14px}
+ .cosmos-header{padding-left:18px;padding-right:18px}
+ .cosmos-mode-tabs{top:95px}
+}
+@media(max-width:780px){
+ .cosmos-header{height:75px;padding:10px 13px}
+ .cosmos-symbol{font-size:29px}
+ .cosmos-ident{gap:7px}
+ .cosmos-ident h1{font-size:25px}
+ .cosmos-brand{font-size:7px}
+ .cosmos-version{display:none}
+ .cosmos-close span{display:none}
+ .cosmos-top-action,.cosmos-close{min-height:34px;padding:6px 9px;font-size:11px}
+ .cosmos-mode-tabs{left:10px;right:10px;top:82px;transform:none;width:calc(100% - 20px);padding:4px;justify-content:space-around}
+ .cosmos-mode-tabs button{font-size:10px;padding:10px 7px;flex:1;text-align:center}
+ .cosmos-left-tools{top:136px;left:10px;width:calc(100% - 20px);max-height:none;display:flex;flex-direction:row;gap:7px;align-items:flex-start}
+ .cosmos-left-tools .cosmos-intro-panel{display:none}
+ .cosmos-left-tools .cosmos-filter-panel{max-height:45dvh;width:min(270px,72vw)}
+ .cosmos-right-tools{top:auto;bottom:116px;right:10px;left:10px;width:auto;max-height:48dvh;pointer-events:none;align-items:stretch;gap:6px}
+ .cosmos-camera-controls{align-self:flex-end;margin-bottom:0}
+ .cosmos-camera-controls button{width:33px;height:33px;font-size:18px}
+ .cosmos-details-panel{max-height:calc(48dvh - 40px);border-radius:16px}
+ .cosmos-insights{padding:14px 16px}
+ .cosmos-insights h2{font-size:22px;margin:0 0 5px}
+ .cosmos-insights p{font-size:10px;line-height:1.4;max-height:46px;overflow:hidden}
+ .cosmos-insights .cosmos-axis-score{display:none}
+ .cosmos-film-detail{padding:12px 15px}
+ .cosmos-film-detail .cosmos-still{aspect-ratio:22/9;max-height:125px}
+ .cosmos-film-detail h2{font-size:20px}
+ .cosmos-film-detail .cosmos-detail-section{padding-top:10px}
+ .cosmos-bottom-hud{bottom:32px;left:12px;right:12px;align-items:flex-end;gap:7px;flex-direction:column}
+ .cosmos-bottom-left{align-self:flex-start;position:absolute;bottom:50px}
+ .cosmos-count{font-size:10px}
+ .cosmos-count strong{font-size:18px}
+ .cosmos-bottom-actions{max-width:100%;gap:5px}
+ .cosmos-bottom-actions button{padding:8px 9px;font-size:9px}
+ .cosmos-guide-trigger{font-size:9px;padding:6px 9px}
+ .cosmos-guide{bottom:100px}
+ .cosmos-small-print{bottom:7px;font-size:7px;letter-spacing:0;width:98%;white-space:normal}
+ .cosmos-star-label{font-size:9px!important;padding:2px 4px}
+ .cosmos-hover-hint{bottom:55dvh}
+}
+@media(max-width:390px){
+ .cosmos-ident h1{font-size:21px}
+ .cosmos-mode-tabs button{font-size:9px;padding:9px 5px}
+ .cosmos-bottom-actions button{font-size:8px;padding:7px}
+ .cosmos-close{min-width:31px;justify-content:center}
+}
+
+.cosmos-outliers{padding:16px 0 12px;margin-top:13px;border-top:1px solid #344967}
+.cosmos-outliers h3{font-size:10px;letter-spacing:.12em;color:#aac8df;margin:0 0 9px;text-transform:uppercase}
+.cosmos-outliers button{border:0;border-bottom:1px solid #31455d;background:transparent;color:#d5e5f5;width:100%;display:flex;justify-content:space-between;gap:8px;padding:9px 0;font-size:11px;text-align:left}
+.cosmos-outliers button:hover{color:#fff}
+.cosmos-outliers span{color:#9cc7e4}
+@media(max-width:780px){.cosmos-insights .cosmos-outliers{display:none}}
