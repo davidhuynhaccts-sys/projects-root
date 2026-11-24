@@ -14,6 +14,7 @@ export default function HuynhTest(){
  const [handle,setHandle]=useState(""),[password,setPassword]=useState(""),[displayName,setDisplayName]=useState("");
  const [authError,setAuthError]=useState(""),[authBusy,setAuthBusy]=useState(false);
  const [tab,setTab]=useState<Tab>("home"),[filmIndex,setFilmIndex]=useState(0),[answers,setAnswers]=useState<Record<string,FilmAnswer>>({}),[expanded,setExpanded]=useState(false);
+ const [immersiveOpen,setImmersiveOpen]=useState(false),[comparisonOpen,setComparisonOpen]=useState(false);
  const ref=useRef<Record<string,FilmAnswer>>({}),timer=useRef<ReturnType<typeof setTimeout>|null>(null),pending=useRef<{id:string;answer:FilmAnswer}|null>(null),queue=useRef<Promise<unknown>>(Promise.resolve());
  const [saveState,setSaveState]=useState<"idle"|"saving"|"saved"|"error">("idle");
  const [sharing,setSharing]=useState<{enabled:boolean;token:string|null}>({enabled:false,token:null}),[shareBusy,setShareBusy]=useState(false);
@@ -46,6 +47,7 @@ export default function HuynhTest(){
   finally{setLoading(false);}
  }
  useEffect(()=>{initialize();return ()=>{if(timer.current)clearTimeout(timer.current)};},[]);
+ useEffect(()=>{if(tab==="results")setImmersiveOpen(true);},[tab]);
  const persist=(id:string,a:FilmAnswer)=>{
   const task=queue.current.catch(()=>{}).then(()=>request("/api/state",{method:"PUT",keepalive:true,body:JSON.stringify({filmId:id,answer:a})}));
   queue.current=task;task.then(()=>setSaveState("saved")).catch(()=>setSaveState("error"));
@@ -78,7 +80,7 @@ export default function HuynhTest(){
    const [share,friend]=await Promise.allSettled([request("/api/share"),request("/api/friends")]);if(share.status==="fulfilled")setSharing(share.value);if(friend.status==="fulfilled")setFriends(friend.value.friends||[]);
   }catch(e){setAuthError(e instanceof Error?e.message:"Could not sign in");}finally{setAuthBusy(false);}
  }
- async function logout(){flush();await queue.current.catch(()=>{});await request("/api/account",{method:"DELETE"}).catch(()=>{});setUser(null);setAnswers({});ref.current={};setExpanded(false);setTab("home");setSharing({enabled:false,token:null});setFriends([]);}
+ async function logout(){flush();await queue.current.catch(()=>{});await request("/api/account",{method:"DELETE"}).catch(()=>{});setUser(null);setAnswers({});ref.current={};setExpanded(false);setImmersiveOpen(false);setComparisonOpen(false);setTab("home");setSharing({enabled:false,token:null});setFriends([]);}
  async function toggleSharing(){setShareBusy(true);try{const s=await request("/api/share",{method:"POST",body:JSON.stringify({enabled:!sharing.enabled})});setSharing(s);}catch(e){alert(e instanceof Error?e.message:"Could not update sharing");}finally{setShareBusy(false);}}
  async function loadFriends(){try{const f=await request("/api/friends");setFriends(f.friends||[]);}catch(e){setFriendError(e instanceof Error?e.message:"Unable to load friends");}}
  async function addFriend(e:React.FormEvent){e.preventDefault();setAddingFriend(true);setFriendError("");try{await request("/api/friends",{method:"POST",body:JSON.stringify({link:friendInput})});setFriendInput("");await loadFriends();}catch(e){setFriendError(e instanceof Error?e.message:"Could not add friend");}finally{setAddingFriend(false);}}
@@ -223,7 +225,8 @@ export default function HuynhTest(){
  </>:null}
  {tab==="results"?<>
   <section className="results-intro"><div className="eyebrow">YOUR {expanded?"EXPANDED":"CORE"} MOVIE PERSONALITY PROFILE · EXPLORATORY PILOT</div><h1>{profile.headline}<span className="accent-star"> ✺</span></h1><p>{profile.narrative}</p><div className="result-count"><span>{profile.completed} / {profile.total} films assessed</span><span>{profile.incomplete?"PARTIAL FILM COVERAGE":"FULL FILM COVERAGE"}</span><span>PROVISIONAL SCORING</span></div></section>
-  <Constellation people={[{id:"self",name:user.name,color:palette[0],profile}]}/>
+  <button type="button" className="btn-primary cosmos-launch" onClick={()=>setImmersiveOpen(true)}>✧ Enter the full-screen Emotional Constellation ↗</button>
+  {immersiveOpen?<Constellation people={[{id:"self",name:user.name,color:palette[0],profile}]} onClose={()=>setImmersiveOpen(false)} onShare={()=>{setImmersiveOpen(false);setComparisonOpen(false);setTabSafe("friends");}}/>:null}
 
   {coreReady&&!expanded?<section className="ht-panel stage-invitation">
     <div className="eyebrow">YOUR CORE PROFILE IS READY</div><h3>There is more to discover.</h3>
@@ -249,11 +252,12 @@ export default function HuynhTest(){
  {tab==="friends"?<>
   <section className="results-intro"><div className="eyebrow">SHARED PERSPECTIVES</div><h1>Find the space <em>between us.</em></h1><p>Put your constellation alongside friends in the same 3D space. Explore where your film responses converge and where they diverge.</p></section>
   <div className="results-grid">
-   <div className="ht-panel"><div className="eyebrow">YOUR SHARE LINK</div><h3>Choose who can see your profile.</h3><p className="hint">Sharing is off by default. Turning it on creates a link to your display name, orientation profile, and film-response constellation. It does not publish your password or raw questionnaire answers. Anyone with the link can view it.</p><button className={sharing.enabled?"btn-secondary":"btn-primary"} disabled={shareBusy} onClick={toggleSharing}>{shareBusy?"Updating...":sharing.enabled?"Turn off sharing":"Enable profile sharing"}</button>{shareUrl?<div className="share-url"><input readOnly value={shareUrl} aria-label="Your profile sharing link"/><button onClick={()=>navigator.clipboard.writeText(shareUrl).then(()=>alert("Link copied")).catch(()=>alert("Copy the link from the field"))}>Copy</button></div>:null}<p className="fine-print">Turning sharing off immediately revokes the existing link. Re-enabling creates a new link.</p></div>
+   <div className="ht-panel"><div className="eyebrow">YOUR SHARE LINK</div><h3>Choose who can see your profile.</h3><p className="hint">Sharing is off by default. Turning it on creates a link to your display name, orientation profile, and film-response constellation. It includes film names, ratings, selected emotional tones, influential aspects and reaction summaries, but not your password or raw slider values. Anyone with the link can view it.</p><button className={sharing.enabled?"btn-secondary":"btn-primary"} disabled={shareBusy} onClick={toggleSharing}>{shareBusy?"Updating...":sharing.enabled?"Turn off sharing":"Enable profile sharing"}</button>{shareUrl?<div className="share-url"><input readOnly value={shareUrl} aria-label="Your profile sharing link"/><button onClick={()=>navigator.clipboard.writeText(shareUrl).then(()=>alert("Link copied")).catch(()=>alert("Copy the link from the field"))}>Copy</button></div>:null}<p className="fine-print">Turning sharing off immediately revokes the existing link. Re-enabling creates a new link.</p></div>
    <div className="ht-panel"><div className="eyebrow">CONNECT CONSTELLATIONS</div><h3>Add a friend's shared profile</h3><p className="hint">Ask your friend to turn on sharing and send you their Huynh Test profile link. No one is added without that link.</p><form onSubmit={addFriend} className="add-friend"><input required value={friendInput} onChange={e=>setFriendInput(e.target.value)} placeholder="Paste your friend's sharing link"/><button className="btn-primary" disabled={addingFriend}>{addingFriend?"Adding...":"Add friend"}</button></form>{friendError?<p className="error">{friendError}</p>:null}</div>
   </div>
   <div className="ht-panel friend-list"><div className="eyebrow">PROFILES IN YOUR COMPARISON</div><h3>{friends.length} shared {friends.length===1?"friend":"friends"}</h3>{friends.length?friends.map((f,i)=><div className="friend-row" key={f.id}><label><input type="checkbox" checked={friendVisible[f.id]!==false} onChange={e=>setFriendVisible(v=>({...v,[f.id]:e.target.checked}))}/><span className="dot-mini" style={{background:palette[(i+1)%palette.length]}}/><strong>{f.name}</strong> <span className="muted">@{f.handle} · {f.profile.completed}/{f.profile.total} films</span></label><button className="ht-link" onClick={()=>removeFriend(f.id)}>Remove</button></div>):<p className="hint">Your friends will appear here after you add their sharing links. Their permission to share can be revoked at any time.</p>}</div>
-  <Constellation people={participants}/>
+  <button type="button" className="btn-primary cosmos-launch" onClick={()=>setComparisonOpen(true)}>✧ Enter the full-screen Friends Constellation ↗</button>
+  {comparisonOpen?<Constellation people={participants} initialMode="compare" onClose={()=>setComparisonOpen(false)} onShare={()=>setComparisonOpen(false)}/>:null}
   <p className="fine-print">Friends only see what someone explicitly shares. This comparison has no friendship ranking or mental-health inference.</p>
  </>:null}
  </main>}
