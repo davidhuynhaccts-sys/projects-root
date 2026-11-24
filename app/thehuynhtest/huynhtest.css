@@ -245,3 +245,41 @@
  .slider-heading,.aspect-rating-heading{grid-template-columns:minmax(0,1fr) 142px;gap:10px;min-height:112px}
  .slider-heading .slider-response-value,.aspect-rating-heading .slider-response-value{font-size:12px}
 }
+
+/* Fixed movie frames, one identical cinematic reference per participant. */
+.film-hero{isolation:isolate}
+.film-still{
+ position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+ object-position:center 38%;z-index:-2;filter:saturate(.9)
+}
+.film-hero::before{
+ content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background:linear-gradient(90deg,rgba(9,14,25,.85) 0%,rgba(9,14,25,.50) 58%,rgba(9,14,25,.28) 100%),
+ linear-gradient(0deg,rgba(8,13,23,.55),transparent 60%)
+}
+.film-hero .film-still-credit{
+ position:absolute;right:18px;bottom:11px;z-index:3;
+ color:#d7e3f2;font-size:10px;text-decoration:underline;
+ text-underline-offset:3px;opacity:.86;max-width:190px;text-align:right;
+ text-shadow:0 1px 7px #03050b
+}
+.film-hero .film-still-credit:hover{color:#fff;opacity:1}
+.film-hero>.eyebrow,.film-hero>h2,.film-hero>p{position:relative;z-index:2}
+.film-tile{position:relative;isolation:isolate;overflow:hidden}
+.film-tile-still{
+ position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+ opacity:.52;z-index:-2;filter:saturate(.75);transition:transform .25s,opacity .25s
+}
+.film-tile::before{
+ content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ background:linear-gradient(0deg,#0f1728 0%,rgba(15,23,40,.75) 36%,rgba(15,23,40,.1) 95%)
+}
+.film-tile:hover .film-tile-still{opacity:.72;transform:scale(1.045)}
+/* Make account access mode unambiguous for returning participants. */
+.auth-choice{display:grid;grid-template-columns:1fr 1fr;gap:7px;
+ background:#0d1523;border:1px solid #33445b;border-radius:12px;padding:5px}
+.auth-choice button{border:0;background:transparent;color:#9fb1c6;border-radius:9px;
+ padding:11px 8px;font-size:12px;font-weight:700}
+.auth-choice button.selected{background:#304963;color:#e9f7ff;box-shadow:0 1px 9px #03081445}
+.auth-choice button:not(.selected):hover{color:#fff;background:#1e3045}
+@media(max-width:760px){.film-hero .film-still-credit{font-size:9px;right:12px;bottom:9px;max-width:115px}.film-hero h2{max-width:75%}}
