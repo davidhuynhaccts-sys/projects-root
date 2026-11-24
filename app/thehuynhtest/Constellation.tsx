@@ -45,13 +45,13 @@ export default function Constellation({people}:{people:Person[]}){
     const active=picked?.id===d.person.id&&picked?.filmId===d.film.filmId;
     return <g key={d.person.id+":"+d.film.filmId} onClick={e=>{e.stopPropagation();setPicked({id:d.person.id,filmId:d.film.filmId})}} className="star-dot" role="button" tabIndex={0} onKeyDown={e=>{if(e.key==="Enter")setPicked({id:d.person.id,filmId:d.film.filmId})}}>
      <circle cx={d.x} cy={d.y} r={active?16:d.radius+3} fill={d.person.color} opacity={active?.25:.13}/>
-     <circle cx={d.x} cy={d.y} r={active?8.5:d.radius} fill={d.person.color} stroke={active?"#fff":"#0a1224"} strokeWidth={active?2:1.2}/>
+     <circle cx={d.x} cy={d.y} r={active?8.5:d.radius} fill={d.person.color} stroke={active?"#fff":"#0a1224"} strokeWidth={active?2:1.2}/>{d.film.mixed?<circle cx={d.x} cy={d.y} r={active?13:11} fill="none" stroke={d.person.color} strokeWidth="1.6" strokeDasharray="3 3" opacity=".95"/>:null}
      <text x={d.x+9} y={d.y-8} fill={active?"#fff":"#c0cade"} fontSize={active?13:10} fontWeight={active?700:400} opacity={d.person.id==="self"||people.length===1||active?.96:.65} paintOrder="stroke" stroke="#0b1220" strokeWidth="3" strokeLinejoin="round">{d.film.title}</text>
     </g>;
    })}
    <text x="26" y="593" fill="#8b9ab2" fontSize="13">Drag to rotate · Select a movie to inspect · Same coordinate system for everyone</text>
   </svg>
-  {selected?<div className="selected-star"><span style={{background:selected.person.color}} className="dot-mini"/><div><strong>{selected.film.title}</strong><p>{selected.person.name} · {selected.film.rating===5?"🤩 Amazing":selected.film.rating===4?"🙂 Good":selected.film.rating===3?"😐 OK":selected.film.rating===2?"🙁 Bad":"😖 Terrible"} · {selected.film.tone==="mixed"?"Mixed / conflicted":selected.film.tone}</p></div><button type="button" onClick={()=>setPicked(null)}>Close</button></div>:null}
+  {selected?<div className="selected-star"><span style={{background:selected.person.color}} className="dot-mini"/><div><strong>{selected.film.title}</strong><p>{selected.person.name} · {selected.film.rating===5?"🤩 Amazing":selected.film.rating===4?"🙂 Good":selected.film.rating===3?"😐 OK":selected.film.rating===2?"🙁 Bad":"😖 Terrible"} · {selected.film.tone==="mixed"?"Mixed / conflicted":selected.film.tone}{selected.film.mixed?" · Mixed aspects noted":""}</p></div><button type="button" onClick={()=>setPicked(null)}>Close</button></div>:null}
   <p className="fine-print">Pilot visualization uses a fixed projection of four provisional orientation dimensions into 3D. Proximity illustrates the current model, not a validated psychological similarity measure.</p>
  </section>;
 }
