@@ -90,7 +90,7 @@ function scoreFilm(film:Film,a:FilmAnswer):FilmPoint|null {
   // The two channels are merged once, not added together. A chosen aspect
   // does not dilute unrelated orientations, and repeated overlapping
   // "made me think" signals cannot inflate an axis.
-  const confidence=counts[i]&&counts[i]===legacyCounts[i]?.15:.35;
+  const confidence=counts[i]>0&&counts[i]===legacyCounts[i] ? .15 : .35;
   const value=base===null?aspect:aspect===null?base:base*(1-confidence)+aspect*confidence;
   if(value===null)return 0; // Undefined dimensions are separately flagged.
   return clamp(value*(.55+.45*film.weights[i]));
