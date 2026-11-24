@@ -66,7 +66,6 @@ export default function ConstellationProfile({people,onReturn,onClose,onFilm}:Pr
  const highlyRated=profile.points.filter(f=>f.rating>=4).sort((a,b)=>b.rating-a.rating).slice(0,4);
  const friends=people.slice(1),filmTitles=new Map(FILMS.map(f=>[f.id,f.title]));
  const completeness=profile.total?profile.completed/profile.total:0;
- const completeness=profile.total?profile.completed/profile.total:0;
  return <div className="cosmos-story-shell">
   <header className="cosmos-story-header">
    <div className="cosmos-story-brand">✧ THE HUYNH TEST <span>/ YOUR MOVIE PERSONALITY PROFILE</span></div>
