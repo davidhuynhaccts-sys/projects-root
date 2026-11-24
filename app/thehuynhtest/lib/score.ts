@@ -62,7 +62,7 @@ function scoreFilm(film:Film,a:FilmAnswer):FilmPoint|null {
  const sums=[0,0,0,0],counts=[0,0,0,0],legacyCounts=[0,0,0,0];
  const tones=a.tones?.length?a.tones:(a.tone?[a.tone]:[]);
  let hasMixed=tones.includes("mixed")||tones.includes("bittersweet");
- const reactionById=new Map<string,number|null>(ASPECT_REACTIONS.map(r=>[r.id,r.strength]));
+ const reactionById=new Map<string,number|null>(ASPECT_REACTIONS.map(r=>[r.id,r.strength] as const));
  for(const item of a.aspects){
   const selected=film.aspects.find(x=>x.id===item.id);
   if(!selected)continue;
