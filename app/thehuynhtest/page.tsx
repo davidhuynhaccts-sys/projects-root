@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useLayoutEffect,useMemo,useRef,useState} from "react";
-import {FILMS,QUESTIONS,RATINGS,TONES,ASPECT_LABELS,AXES,AXIS_LABELS,TEST_VERSION} from "./lib/data";
+import {FILMS,CORE_FILMS,EXPANDED_FILMS,QUESTIONS,RATINGS,TONES,LEGACY_TONE_LABELS,ASPECT_LABELS,AXES,AXIS_LABELS,TEST_VERSION} from "./lib/data";
 import {complete,freshAnswer,normalizeAnswer,scoreProfile,type FilmAnswer,type Profile} from "./lib/score";
 import Constellation from "./Constellation";
 import {STILLS} from "./lib/stills";
@@ -13,15 +13,19 @@ export default function HuynhTest(){
  const [loading,setLoading]=useState(true),[user,setUser]=useState<User|null>(null),[authMode,setAuthMode]=useState<"login"|"register">("login");
  const [handle,setHandle]=useState(""),[password,setPassword]=useState(""),[displayName,setDisplayName]=useState("");
  const [authError,setAuthError]=useState(""),[authBusy,setAuthBusy]=useState(false);
- const [tab,setTab]=useState<Tab>("home"),[filmIndex,setFilmIndex]=useState(0),[answers,setAnswers]=useState<Record<string,FilmAnswer>>({});
+ const [tab,setTab]=useState<Tab>("home"),[filmIndex,setFilmIndex]=useState(0),[answers,setAnswers]=useState<Record<string,FilmAnswer>>({}),[expanded,setExpanded]=useState(false);
  const ref=useRef<Record<string,FilmAnswer>>({}),timer=useRef<ReturnType<typeof setTimeout>|null>(null),pending=useRef<{id:string;answer:FilmAnswer}|null>(null),queue=useRef<Promise<unknown>>(Promise.resolve());
  const [saveState,setSaveState]=useState<"idle"|"saving"|"saved"|"error">("idle");
  const [sharing,setSharing]=useState<{enabled:boolean;token:string|null}>({enabled:false,token:null}),[shareBusy,setShareBusy]=useState(false);
  const [friends,setFriends]=useState<Friend[]>([]),[friendInput,setFriendInput]=useState(""),[friendError,setFriendError]=useState(""),[addingFriend,setAddingFriend]=useState(false);
  const [friendVisible,setFriendVisible]=useState<Record<string,boolean>>({});
- const film=FILMS[filmIndex];const answer=answers[film.id]||freshAnswer();const profile=useMemo(()=>scoreProfile(answers),[answers]);
- const answered=FILMS.filter(f=>answers[f.id]&&complete(answers[f.id])&&answers[f.id].status==="watched").length;
- const skipped=FILMS.filter(f=>answers[f.id]&&answers[f.id].status!=="watched").length;
+ const currentFilms=expanded?FILMS:CORE_FILMS;
+ const coreReady=CORE_FILMS.every(f=>Boolean(answers[f.id]&&complete(answers[f.id])));
+ const expandedReady=FILMS.every(f=>Boolean(answers[f.id]&&complete(answers[f.id])));
+ const film=FILMS[filmIndex];const answer=answers[film.id]||freshAnswer();
+ const profile=useMemo(()=>scoreProfile(answers,expanded),[answers,expanded]);
+ const answered=currentFilms.filter(f=>answers[f.id]&&complete(answers[f.id])&&answers[f.id].status==="watched").length;
+ const skipped=currentFilms.filter(f=>answers[f.id]&&answers[f.id].status!=="watched").length;
  const activeFilmCount=answered+skipped;
  const shareUrl=sharing.enabled&&sharing.token&&typeof window!=="undefined"?window.location.origin+BASE+"/share/"+sharing.token:"";
  const participants=useMemo(()=>[{id:"self",name:user?.name||"You",color:palette[0],profile},...friends.filter(f=>friendVisible[f.id]!==false).map((f,i)=>({id:f.id,name:f.name,color:palette[(i+1)%palette.length],profile:f.profile}))],[user,profile,friends,friendVisible]);
@@ -30,7 +34,10 @@ export default function HuynhTest(){
   try{
    const a=await request("/api/account");
    if(a.user){setUser(a.user);const s=await request("/api/state");const raw=s.answers||{};ref.current=raw;setAnswers(raw);
-    const first=FILMS.findIndex(f=>!(raw[f.id]&&complete(raw[f.id])));setFilmIndex(first<0?0:first);setTab(first<0?"results":"home");
+    const enabled=Boolean(s.expanded);setExpanded(enabled);
+     const coreComplete=CORE_FILMS.every(f=>Boolean(raw[f.id]&&complete(raw[f.id])));
+     const unfinished=(enabled?FILMS:CORE_FILMS).findIndex(f=>!(raw[f.id]&&complete(raw[f.id])));
+     setFilmIndex(unfinished<0?0:unfinished);setTab(coreComplete?"results":"home");
     const [share,friend]=await Promise.allSettled([request("/api/share"),request("/api/friends")]);
     if(share.status==="fulfilled")setSharing(share.value);
     if(friend.status==="fulfilled")setFriends(friend.value.friends||[]);
@@ -56,22 +63,46 @@ export default function HuynhTest(){
   if(timer.current)clearTimeout(timer.current);
   timer.current=setTimeout(flush,520);
  };
- const navigate=(idx:number)=>{flush();setFilmIndex(Math.max(0,Math.min(FILMS.length-1,idx)));setTab("test");};
+ const navigate=(idx:number)=>{flush();setFilmIndex(Math.max(0,Math.min(currentFilms.length-1,idx)));setTab("test");};
  useLayoutEffect(()=>{if(tab!=="test")return;document.getElementById("ht-current-film-hero")?.scrollIntoView({behavior:"auto",block:"start"});},[filmIndex,tab]);
  const setTabSafe=(next:Tab)=>{flush();setTab(next);if(next!=="test")window.scrollTo(0,0);if(next==="friends")loadFriends();};
  useEffect(()=>{const onHide=()=>{if(document.visibilityState==="hidden")flush()};document.addEventListener("visibilitychange",onHide);window.addEventListener("pagehide",flush);return()=>{document.removeEventListener("visibilitychange",onHide);window.removeEventListener("pagehide",flush);};});
  async function submitAuth(e:React.FormEvent){
   e.preventDefault();setAuthBusy(true);setAuthError("");
   try{const a=await request("/api/account",{method:"POST",body:JSON.stringify({action:authMode,handle,password,name:displayName})});
-   setUser(a.user);setPassword("");const s=await request("/api/state");const saved=s.answers||{};ref.current=saved;setAnswers(saved);const first=FILMS.findIndex(f=>!(saved[f.id]&&complete(saved[f.id])));setFilmIndex(first<0?0:first);setTab(first<0?"results":"home");setLoading(false);
+   setUser(a.user);setPassword("");const s=await request("/api/state");const saved=s.answers||{};ref.current=saved;setAnswers(saved);
+   const enabled=Boolean(s.expanded);setExpanded(enabled);
+   const coreComplete=CORE_FILMS.every(f=>Boolean(saved[f.id]&&complete(saved[f.id])));
+   const first=(enabled?FILMS:CORE_FILMS).findIndex(f=>!(saved[f.id]&&complete(saved[f.id])));
+   setFilmIndex(first<0?0:first);setTab(coreComplete?"results":"home");setLoading(false);
    const [share,friend]=await Promise.allSettled([request("/api/share"),request("/api/friends")]);if(share.status==="fulfilled")setSharing(share.value);if(friend.status==="fulfilled")setFriends(friend.value.friends||[]);
   }catch(e){setAuthError(e instanceof Error?e.message:"Could not sign in");}finally{setAuthBusy(false);}
  }
- async function logout(){flush();await queue.current.catch(()=>{});await request("/api/account",{method:"DELETE"}).catch(()=>{});setUser(null);setAnswers({});ref.current={};setTab("home");setSharing({enabled:false,token:null});setFriends([]);}
+ async function logout(){flush();await queue.current.catch(()=>{});await request("/api/account",{method:"DELETE"}).catch(()=>{});setUser(null);setAnswers({});ref.current={};setExpanded(false);setTab("home");setSharing({enabled:false,token:null});setFriends([]);}
  async function toggleSharing(){setShareBusy(true);try{const s=await request("/api/share",{method:"POST",body:JSON.stringify({enabled:!sharing.enabled})});setSharing(s);}catch(e){alert(e instanceof Error?e.message:"Could not update sharing");}finally{setShareBusy(false);}}
  async function loadFriends(){try{const f=await request("/api/friends");setFriends(f.friends||[]);}catch(e){setFriendError(e instanceof Error?e.message:"Unable to load friends");}}
  async function addFriend(e:React.FormEvent){e.preventDefault();setAddingFriend(true);setFriendError("");try{await request("/api/friends",{method:"POST",body:JSON.stringify({link:friendInput})});setFriendInput("");await loadFriends();}catch(e){setFriendError(e instanceof Error?e.message:"Could not add friend");}finally{setAddingFriend(false);}}
  async function removeFriend(id:string){try{await request("/api/friends",{method:"DELETE",body:JSON.stringify({id})});await loadFriends();}catch(e){setFriendError(e instanceof Error?e.message:"Could not remove friend");}}
+ async function startExpanded(){
+  if(!coreReady)return;
+  flush();
+  try{
+   await request("/api/state",{method:"POST",body:JSON.stringify({action:"enableExpanded"})});
+   setExpanded(true);
+   const next=EXPANDED_FILMS.findIndex(f=>!(ref.current[f.id]&&complete(ref.current[f.id])));
+   setFilmIndex(next<0?10:10+next);setTab(next<0?"results":"test");
+  }catch(e){alert(e instanceof Error?e.message:"Could not unlock the expanded test.");}
+ }
+ function toggleTone(id:string){
+  const earlier=answer.tones?.length?answer.tones:(answer.tone?[answer.tone]:[]);
+  const current=earlier.filter(x=>TONES.some(t=>t.id===x));
+  let next:string[];
+  if(id==="indifferent"||id==="unsure")next=current.includes(id)?[]:[id];
+  else if(current.includes(id))next=current.filter(x=>x!==id);
+  else if(current.filter(x=>x!=="unsure"&&x!=="indifferent").length>=3)return;
+  else next=[...current.filter(x=>x!=="unsure"&&x!=="indifferent"),id];
+  change({tones:next,tone:next[0]||null});
+ }
  function toggleAspect(id:string){
   if(id==="unsure"){change({aspects:[{id:"unsure",valence:"unsure"}]});return;}
   let next=answer.aspects.filter(a=>a.id!=="unsure");
