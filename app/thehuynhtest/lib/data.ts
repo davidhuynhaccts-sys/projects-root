@@ -43,6 +43,20 @@ export const QUESTIONS = [
  {id:"originality",question:"How much did you appreciate the movie's originality and creativity?",labels:["Not at all","Very slightly","Slightly","Moderately","Strongly","Very much","Extremely"]},
  {id:"reflection",question:"How much did this movie make you think about life or your own experiences?",labels:["Not at all","Very slightly","Slightly","Moderately","Strongly","Very much","Extremely"]}
 ] as const;
+/** Film-specific reactions describe engagement, not endorsement or moral character.
+ * Preserve raw reaction identifiers and prior slider values separately. */
+export const ASPECT_REACTIONS = [
+ {id:"made_me_think",label:"Made me think",emoji:"💭",strength:.90},
+ {id:"moved_me",label:"Moved me emotionally",emoji:"💗",strength:.95},
+ {id:"unsettled_me",label:"Unsettled me",emoji:"😟",strength:.88},
+ {id:"impressed_me",label:"Impressed me",emoji:"✨",strength:.80},
+ {id:"frustrated_me",label:"Frustrated me",emoji:"😤",strength:.70},
+ {id:"left_me_conflicted",label:"Left me conflicted",emoji:"⚖️",strength:.86},
+ {id:"didnt_resonate",label:"Didn't resonate",emoji:"➖",strength:.12},
+ {id:"unsure",label:"Not sure",emoji:"❔",strength:null}
+] as const;
+export type AspectReactionId = typeof ASPECT_REACTIONS[number]["id"];
+/** Historical seven-position aspect labels, retained solely to display prior answers. */
 export const ASPECT_LABELS = ["Very negative","Negative","A little negative","Neither positive nor negative","A little positive","Positive","Very positive"];
 export const RATINGS = [{n:1,emoji:"😖",label:"Terrible"},{n:2,emoji:"🙁",label:"Bad"},{n:3,emoji:"😐",label:"OK"},{n:4,emoji:"🙂",label:"Good"},{n:5,emoji:"🤩",label:"Amazing"}];
 export const TONES = [
@@ -61,4 +75,4 @@ export const TONES = [
  {id:"unsure",label:"Not sure",emoji:"❔"}
 ] as const;
 export const LEGACY_TONE_LABELS:Record<string,string>={uplifting:"Uplifting (previous response)",difficult:"Difficult (previous response)"};
-export const TEST_VERSION="2.0-pilot-2";
+export const TEST_VERSION="2.0-pilot-3";
