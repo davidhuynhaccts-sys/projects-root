@@ -24,10 +24,10 @@ export const STILLS:Record<string,Still> = {
     "sourcePage": "https://www.space.com/the-matrix-movies-in-order"
   },
   "greenbook": {
-    "src": "https://arc-anglerfish-washpost-prod-washpost.s3.amazonaws.com/public/MDKOJ6HIDII6RBCJD7ZGGYE2GE.jpg",
-    "scene": "Tony and Don traveling together in a green car",
-    "source": "The Washington Post",
-    "sourcePage": "https://www.washingtonpost.com/history/2018/11/16/green-book-new-movie-evokes-crucial-guide-black-travelers-during-segregation/"
+    "src": "https://kviff.tv/media/_cache/film_detail_cover/films/2019/09/18/Green-Book-car.jpg",
+    "scene": "Tony and Don traveling together in a turquoise car",
+    "source": "KVIFF.TV",
+    "sourcePage": "https://kviff.tv/katalog/zelena-kniha"
   },
   "spirited": {
     "src": "https://conteudo.imguol.com.br/c/entretenimento/a4/2020/01/20/cena-de-a-viagem-de-chihiro-2001-1579522908937_v2_900x506.jpg",
@@ -48,10 +48,10 @@ export const STILLS:Record<string,Still> = {
     "sourcePage": "https://www.informacion.es/ocio/cine/2017/04/06/mejores-frases-amelie-5942579.html"
   },
   "parasite": {
-    "src": "https://cdni.fancaps.net/file/fancaps-movieimages/3977467.jpg",
-    "scene": "The Kim family gathered in the Park house",
-    "source": "Fancaps",
-    "sourcePage": "https://fancaps.net/movies/Image.php?imageid=3977467"
+    "src": "https://arc-anglerfish-arc2-prod-infobae.s3.amazonaws.com/public/UJGDFIQM6BEEVGRWC63OROO3QA.jpg",
+    "scene": "Kim family relaxing together in the Park living room",
+    "source": "Infobae",
+    "sourcePage": "https://www.infobae.com/cultura/2020/01/13/parasite-la-magistral-e-impredecible-pelicula-coreana-que-conquista-al-mundo-y-a-los-premios/"
   },
   "eeaao": {
     "src": "https://media.vanityfair.com/photos/6258708967f4b24bbe872214/3%3A2/w_1665%2Ch_1110%2Cc_limit/michelle-yeoh-everything-everywhere-all-at-once.jpg",
@@ -90,10 +90,10 @@ export const STILLS:Record<string,Still> = {
     "sourcePage": "https://www.dc.com/movies/joker-2019"
   },
   "arrival": {
-    "src": "https://pics.filmaffinity.com/arrival-271887675-large.jpg",
-    "scene": "Louise Banks preparing for first contact",
-    "source": "FilmAffinity",
-    "sourcePage": "https://www.filmaffinity.com/us/movieimage.php?imageId=271887675"
+    "src": "https://media.vanityfair.com/photos/57cc8060c4c543236f2c1213/16%3A9/w_1440%2Ch_810%2Cc_limit/arrival-review.jpg",
+    "scene": "Louise Banks holds a whiteboard while communicating in the spacecraft",
+    "source": "Vanity Fair",
+    "sourcePage": "https://www.vanityfair.com/hollywood/2016/09/arrival-amy-adams-review"
   },
   "godfather": {
     "src": "https://iagq.tmgrup.com.tr/img/photo_gallery_photos/17-02/19/the-godfather-screening-moosic-dickson-city-stroudsburg-1487512893.jpg",
