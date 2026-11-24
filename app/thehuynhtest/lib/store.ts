@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { Redis } from "@upstash/redis";
 import type { NextRequest } from "next/server";
-import { FILMS } from "./data";
+import { FILMS,EXPANDED_FILMS } from "./data";
 import { freshAnswer,normalizeAnswer,scoreProfile,type FilmAnswer } from "./score";
 export type HTUser={id:string;handle:string;name:string;salt:string;passwordHash:string;createdAt:number;shareToken?:string;shareEnabled?:boolean};
 const MONTH=60*60*24*30;
@@ -55,6 +55,18 @@ export async function findByHandle(handle:string):Promise<HTUser|null>{
  const db=redisDb();const id=await db.get<string>("ht:handle:"+handle);
  return id?(await db.get<HTUser>("ht:user:"+id))||null:null;
 }
+/** An earlier 20-film participant keeps access to already submitted expansion answers. */
+export async function expandedEnabled(uid:string,answers?:Record<string,FilmAnswer>):Promise<boolean>{
+ const db=redisDb();
+ const choice=await db.get<boolean>("ht:expanded:"+uid);
+ if(choice)return true;
+ if(answers)return EXPANDED_FILMS.some(f=>typeof answers[f.id]?.updatedAt==="number");
+ const exists=await Promise.all(EXPANDED_FILMS.map(f=>db.exists("ht:response:"+uid+":"+f.id)));
+ return exists.some(Boolean);
+}
+export async function enableExpansion(uid:string){
+ await redisDb().set("ht:expanded:"+uid,true);
+}
 export async function loadAnswers(uid:string):Promise<Record<string,FilmAnswer>>{
  const db=redisDb();
  const records=await Promise.all(FILMS.map(f=>db.get<FilmAnswer>("ht:response:"+uid+":"+f.id)));
@@ -75,7 +87,7 @@ export async function getSharedByToken(token:string){
  const user=await db.get<HTUser>("ht:user:"+uid);
  if(!user||!user.shareEnabled||user.shareToken!==token)return null;
  const answers=await loadAnswers(user.id);
- const profile=scoreProfile(answers);
+ const profile=scoreProfile(answers,await expandedEnabled(user.id,answers));
  return {id:user.id,name:user.name,handle:user.handle,profile};
 }
 export async function getSharedById(uid:string){
