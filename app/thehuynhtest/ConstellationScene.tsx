@@ -61,6 +61,9 @@ export default function ConstellationScene({nodes,centroids,selectedKey,showLabe
   camera.position.set(0,1.8,17);
   const controls=new OrbitControls(camera,screen);
   controls.enableDamping=true;controls.dampingFactor=.07;controls.minDistance=4;controls.maxDistance=34;
+  // Native vertical touch scrolling moves between the constellation and the
+  // MPP section; horizontal dragging continues to rotate the 3D scene.
+  screen.style.touchAction="pan-y";
   controls.enablePan=true;controls.panSpeed=.62;controls.rotateSpeed=.55;controls.autoRotateSpeed=.23;
   controls.touches.ONE=THREE.TOUCH.ROTATE;controls.touches.TWO=THREE.TOUCH.DOLLY_PAN;
   const stars:number[]=[];let seed=15237;
@@ -103,6 +106,10 @@ export default function ConstellationScene({nodes,centroids,selectedKey,showLabe
   const pointerUp=(ev:PointerEvent)=>{const start=items.pointerStart;items.pointerStart=null;
    if(start&&Math.hypot(start.x-ev.clientX,start.y-ev.clientY)<5){const match=hit(ev);if(match)onSelectRef.current(match);}
   };
+  // On desktop the wheel scrolls to the MPP above, instead of zooming into
+  // the constellation. Camera zoom remains available via the +/- buttons.
+  const wheelScroll=(event:WheelEvent)=>{if(!event.ctrlKey)event.stopImmediatePropagation();};
+  screen.addEventListener("wheel",wheelScroll,{capture:true,passive:true});
   screen.addEventListener("pointerdown",pointerDown);
   screen.addEventListener("pointermove",pointerMove);
   screen.addEventListener("pointerup",pointerUp);
@@ -127,6 +134,7 @@ export default function ConstellationScene({nodes,centroids,selectedKey,showLabe
   animate();
   return ()=>{
    cancelAnimationFrame(frame);observer.disconnect();
+   screen.removeEventListener("wheel",wheelScroll,true);
    screen.removeEventListener("pointerdown",pointerDown);screen.removeEventListener("pointermove",pointerMove);screen.removeEventListener("pointerup",pointerUp);
    controls.dispose();
    for(const item of Array.from(items.entries.values())){item.label.remove();freeObject(item.group);}
