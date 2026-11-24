@@ -1,6 +1,6 @@
-import { FILMS,CORE_FILMS,AXES,AXIS_LABELS,TONES,LEGACY_TONE_LABELS,TEST_VERSION,type Axis,type Film } from "./data";
+import { FILMS,CORE_FILMS,AXES,AXIS_LABELS,TONES,ASPECT_REACTIONS,LEGACY_TONE_LABELS,TEST_VERSION,type Axis,type Film } from "./data";
 export type AnswerStatus = "watched" | "unwatched" | "unfamiliar";
-export type AspectAnswer = { id:string; valence:number|"mixed"|"unsure"|null };
+export type AspectAnswer = { id:string; valence:number|"mixed"|"unsure"|null; reactions:string[] };
 export type FilmAnswer = { status:AnswerStatus; rating:number|null; tone:string|null; tones:string[]; sliders:(number|null)[]; aspects:AspectAnswer[]; updatedAt?:number };
 export type FilmPoint = {filmId:string;title:string;rating:number;tone:string;tones:string[];vector:[number,number,number,number];point:[number,number,number];selectedAspects:string[];mixed:boolean;evidence:[boolean,boolean,boolean,boolean]};
 export type Profile = {version:string;stage:"core"|"expanded";completed:number;skipped:number;total:number;incomplete:boolean;orientationScores:Record<Axis,number|null>;points:FilmPoint[];centroid:[number,number,number]|null;headline:string;narrative:string;topFilms:string[];coveredOrientations:Axis[]};
@@ -22,13 +22,19 @@ export function normalizeAnswer(film:Film,raw:any):FilmAnswer {
  if(Array.isArray(raw?.aspects))for(const item of raw.aspects.slice(0,6)){
   const id=String(item?.id||"");if(seen.has(id)||!(film.aspects.some(a=>a.id===id)||id==="unsure"))continue;
   const v=item?.valence;const valence=Number.isInteger(v)&&v>=0&&v<=6?v:(v==="mixed"||v==="unsure"?v:null);
-  aspects.push({id,valence});seen.add(id);if(aspects.length>=2)break;
+  const allowed=new Set<string>(ASPECT_REACTIONS.map(r=>r.id));
+  let reactions=Array.isArray(item?.reactions)
+   ? Array.from(new Set<string>(item.reactions.filter((r:unknown):r is string=>typeof r==="string"&&allowed.has(r)))).slice(0,2)
+   : [];
+  if(reactions.includes("unsure"))reactions=["unsure"];
+  else if(reactions.includes("didnt_resonate"))reactions=["didnt_resonate"];
+  aspects.push({id,valence,reactions});seen.add(id);if(aspects.length>=2)break;
  }
  return {status,rating,tone,tones,sliders,aspects,updatedAt:typeof raw?.updatedAt==="number"?raw.updatedAt:undefined};
 }
 export function complete(a:FilmAnswer):boolean {
  if(a.status!=="watched")return true;
- return a.rating!==null&&((a.tones?.length||0)>0||a.tone!==null)&&a.sliders.length===5&&a.sliders.every(v=>v!==null)&&a.aspects.length>0&&a.aspects.every(x=>x.valence!==null);
+ return a.rating!==null&&((a.tones?.length||0)>0||a.tone!==null)&&a.sliders.length===5&&a.sliders.every(v=>v!==null)&&a.aspects.length>0&&a.aspects.every(x=>x.id==="unsure"||x.reactions?.length>0||x.valence!==null);
 }
 const clamp=(n:number)=>Math.max(0,Math.min(1,n));
 const normal=(n:number|null)=>n===null||n===-1?null:n/6;
@@ -50,38 +56,58 @@ function scoreFilm(film:Film,a:FilmAnswer):FilmPoint|null {
   weighted([[1,.55],[0,.45]]),
   weighted([[3,.56],[2,.44]])
  ];
- const sums=[0,0,0,0];let selectedCount=0;
+ // Responses describe the SALIENCE of selected themes, not approval of the topics.
+ // Standardized sliders remain primary (65%); reactions are capped at 35% for
+ // the matching film-specific orientation. No repeated reaction adds extra points.
+ const sums=[0,0,0,0],counts=[0,0,0,0],legacyCounts=[0,0,0,0];
  const tones=a.tones?.length?a.tones:(a.tone?[a.tone]:[]);
- let signedSum=0,signedCount=0,hasMixed=tones.includes("mixed")||tones.includes("bittersweet");
+ let hasMixed=tones.includes("mixed")||tones.includes("bittersweet");
+ const reactionById=new Map<string,number|null>(ASPECT_REACTIONS.map(r=>[r.id,r.strength]));
  for(const item of a.aspects){
   const selected=film.aspects.find(x=>x.id===item.id);
-  if(!selected||item.valence===null||item.valence==="unsure")continue;
+  if(!selected)continue;
   const i=AXES.indexOf(selected.axis);
-  const strength=item.valence==="mixed"?1:(.45+.55*Math.abs(item.valence-3)/3);
-  sums[i]+=strength;selectedCount++;
-  if(item.valence==="mixed")hasMixed=true;
-  if(typeof item.valence==="number"){signedSum+=(item.valence-3)/3;signedCount++;}
+  const responses=item.reactions||[];
+  const strengths=responses.map(id=>reactionById.get(id)).filter((v):v is number=>typeof v==="number");
+  const hasNewResponse=responses.length>0;
+  if(responses.includes("left_me_conflicted"))hasMixed=true;
+  if(strengths.length){
+   const salience=strengths.reduce((sum,v)=>sum+v,0)/strengths.length;
+   sums[i]+=salience;counts[i]++;
+  } else if(!hasNewResponse&&item.valence!==null&&item.valence!=="unsure"){
+   // Legacy slider data is retained. It is weaker evidence because its
+   // positive/negative wording was ambiguous, and is never recoded as a reaction.
+   const v=item.valence;
+   const salience=v==="mixed"?.78:(.4+.5*Math.abs(v-3)/3);
+   sums[i]+=salience;counts[i]++;legacyCounts[i]++;
+   if(v==="mixed")hasMixed=true;
+  }
  }
- const evidence=standard.map((base,i)=>base!==null||sums[i]>0) as [boolean,boolean,boolean,boolean];
+ const evidence=standard.map((base,i)=>base!==null||counts[i]>0) as [boolean,boolean,boolean,boolean];
  if(!evidence.some(Boolean))return null;
  const vector=standard.map((base,i)=>{
-  const aspect=sums[i]>0?sums[i]/Math.max(1,selectedCount):null;
-  const value=base===null?aspect:aspect===null?base:.64*base+.36*aspect;
-  if(value===null)return 0; // Undefined dimension is flagged, never scored as zero.
+  const aspect=counts[i]?sums[i]/counts[i]:null;
+  // The two channels are merged once, not added together. A chosen aspect
+  // does not dilute unrelated orientations, and repeated overlapping
+  // "made me think" signals cannot inflate an axis.
+  const confidence=counts[i]&&counts[i]===legacyCounts[i]?.15:.35;
+  const value=base===null?aspect:aspect===null?base:base*(1-confidence)+aspect*confidence;
+  if(value===null)return 0; // Undefined dimensions are separately flagged.
   return clamp(value*(.55+.45*film.weights[i]));
  }) as [number,number,number,number];
  const ratingValence=((a.rating||3)-3)/2;
- const aspectValence=signedCount?signedSum/signedCount:null;
  const toneWeights:Record<string,number|null>={
   joyful:.85,hopeful:.75,warm:.65,sad:-.75,tense:-.65,unsettled:-.8,angry:-.85,awed:.55,
   reflective:null,bittersweet:null,mixed:null,indifferent:0,unsure:null,uplifting:.7,difficult:-.7
  };
  const valenced=tones.map(t=>toneWeights[t]).filter((n):n is number=>typeof n==="number");
  const toneValence=valenced.length?valenced.reduce((a,b)=>a+b,0)/valenced.length:null;
- // Unknown or deliberately mixed reactions do not become artificial neutral observations.
- let weightedOpinion=.55*ratingValence,weight=.55;
- if(aspectValence!==null){weightedOpinion+=.3*aspectValence;weight+=.3;}
- if(toneValence!==null){weightedOpinion+=.15*toneValence;weight+=.15;}
+ // Reactions such as "Unsettled me" or "Frustrated me" do not imply dislike of
+ // the filmmaking. The emotional-valence coordinate comes from the participant's
+ // separate overall rating and primary emotional tones only. Old aspect
+ // valence remains stored but isn't treated as moral endorsement.
+ let weightedOpinion=.8*ratingValence,weight=.8;
+ if(toneValence!==null){weightedOpinion+=.2*toneValence;weight+=.2;}
  const opinion=weightedOpinion/weight;
  const base=project(vector);
  const point:[number,number,number]=[base[0],base[1],+opinion.toFixed(4)];
