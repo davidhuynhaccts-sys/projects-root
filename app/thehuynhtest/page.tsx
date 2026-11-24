@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useLayoutEffect,useMemo,useRef,useState} from "react";
-import {FILMS,CORE_FILMS,EXPANDED_FILMS,QUESTIONS,RATINGS,TONES,LEGACY_TONE_LABELS,ASPECT_LABELS,AXES,AXIS_LABELS,TEST_VERSION} from "./lib/data";
+import {FILMS,CORE_FILMS,EXPANDED_FILMS,QUESTIONS,RATINGS,TONES,LEGACY_TONE_LABELS,ASPECT_REACTIONS,ASPECT_LABELS,AXES,AXIS_LABELS,TEST_VERSION} from "./lib/data";
 import {complete,freshAnswer,normalizeAnswer,scoreProfile,type FilmAnswer,type Profile} from "./lib/score";
 import Constellation from "./Constellation";
 import {STILLS} from "./lib/stills";
@@ -104,13 +104,26 @@ export default function HuynhTest(){
   change({tones:next,tone:next[0]||null});
  }
  function toggleAspect(id:string){
-  if(id==="unsure"){change({aspects:[{id:"unsure",valence:"unsure"}]});return;}
+  if(id==="unsure"){
+   const hasUnsure=answer.aspects.some(a=>a.id==="unsure");
+   change({aspects:hasUnsure?[]:[{id:"unsure",valence:"unsure",reactions:["unsure"]}]});return;
+  }
   let next=answer.aspects.filter(a=>a.id!=="unsure");
   if(next.some(a=>a.id===id))next=next.filter(a=>a.id!==id);
-  else if(next.length<2)next=[...next,{id,valence:null}];
+  else if(next.length<2)next=[...next,{id,valence:null,reactions:[]}];
   change({aspects:next});
  }
- function aspectValence(id:string,v:number|"mixed"|"unsure"){change({aspects:answer.aspects.map(a=>a.id===id?{...a,valence:v}:a)});}
+ function toggleAspectReaction(aspectId:string,reactionId:string){
+  const item=answer.aspects.find(a=>a.id===aspectId);
+  if(!item)return;
+  const current=item.reactions||[];
+  let next:string[];
+  if(reactionId==="unsure"||reactionId==="didnt_resonate")next=current.includes(reactionId)?[]:[reactionId];
+  else if(current.includes(reactionId))next=current.filter(r=>r!==reactionId);
+  else if(current.filter(r=>r!=="unsure"&&r!=="didnt_resonate").length>=2)return;
+  else next=[...current.filter(r=>r!=="unsure"&&r!=="didnt_resonate"),reactionId];
+  change({aspects:answer.aspects.map(a=>a.id===aspectId?{...a,reactions:next}:a)});
+ }
  if(loading)return <div className="ht-loading"><div className="ht-mark">✺</div><p>Preparing your constellation...</p></div>;
  return <div className="ht-shell">
  <header className="ht-header">
@@ -166,8 +179,41 @@ export default function HuynhTest(){
      </div>
       <div className="question-block"><div className="qnum">03 · YOUR EXPERIENCE</div><h3>How the movie resonated with you</h3><p className="hint">Same five questions for every film. The middle is not automatically an answer.</p>
       {QUESTIONS.map((q,i)=>{const v=answer.sliders[i];return <div className="slider-question" key={q.id}><div className="slider-heading"><strong>{q.question}</strong><div className={"slider-response"+(v===null?" is-empty":"")} aria-live="polite"><span className="slider-response-caption">YOUR RESPONSE</span><span className="slider-response-value">{v===null?"Not answered":v===-1?"Not sure":q.labels[v]}</span></div></div><input aria-label={q.question} type="range" min="0" max="6" step="1" value={v!==null&&v!==-1?v:3} onChange={e=>change({sliders:answer.sliders.map((old,j)=>j===i?Number(e.target.value):old)})}/><div className="slider-ends"><span>{q.labels[0]}</span><span>{q.labels[6]}</span></div><div className="slider-actions"><button type="button" className={v===3?"tiny active": "tiny"} onClick={()=>change({sliders:answer.sliders.map((old,j)=>j===i?3:old)})}>Select middle</button><button type="button" className={v===-1?"tiny active":"tiny"} onClick={()=>change({sliders:answer.sliders.map((old,j)=>j===i?-1:old)})}>Not sure</button></div></div>})}</div>
-      <div className="question-block"><div className="qnum">04 · THE DETAILS THAT MATTERED</div><h3>Which aspects most influenced your opinion of this movie?</h3><p className="hint">Select one or two. Evaluate each separately. There are no right answers.</p><div className="aspect-grid">{film.aspects.map(a=><button key={a.id} className={answer.aspects.some(x=>x.id===a.id)?"choice selected":"choice"} onClick={()=>toggleAspect(a.id)}><span>{answer.aspects.some(x=>x.id===a.id)?"✓ ":"○ "}</span>{a.label}</button>)}<button className={answer.aspects.some(x=>x.id==="unsure")?"choice selected":"choice"} onClick={()=>toggleAspect("unsure")}>Not sure</button></div>
-       {answer.aspects.filter(a=>a.id!=="unsure").map(a=>{const label=film.aspects.find(x=>x.id===a.id)?.label||a.id;return <div className="aspect-rating" key={a.id}><div className="aspect-rating-heading"><strong>How did you feel about: {label}?</strong><div className={"slider-response"+(a.valence===null?" is-empty":"")} aria-live="polite"><span className="slider-response-caption">YOUR RESPONSE</span><span className="slider-response-value">{a.valence===null?"Not answered":typeof a.valence==="number"?ASPECT_LABELS[a.valence]:a.valence==="mixed"?"Mixed / conflicted":"Not sure"}</span></div></div><input aria-label={"Your response to "+label} type="range" min="0" max="6" step="1" value={typeof a.valence==="number"?a.valence:3} onChange={e=>aspectValence(a.id,Number(e.target.value))}/><div className="slider-ends"><span>Very negative</span><span>Very positive</span></div><div className="slider-actions"><button className={a.valence===3?"tiny active":"tiny"} onClick={()=>aspectValence(a.id,3)}>Select neutral</button><button className={a.valence==="mixed"?"tiny active":"tiny"} onClick={()=>aspectValence(a.id,"mixed")}>Mixed / conflicted</button><button className={a.valence==="unsure"?"tiny active":"tiny"} onClick={()=>aspectValence(a.id,"unsure")}>Not sure</button></div></div>})}
+      <div className="question-block">
+       <div className="qnum">04 · THE DETAILS THAT MATTERED</div>
+       <h3>Which aspects most influenced your experience of this movie?</h3>
+       <p className="hint">Choose one or two aspects. Then describe how each affected you. There are no right answers.</p>
+       <div className="aspect-grid">
+        {film.aspects.map(a=><button type="button" key={a.id} aria-pressed={answer.aspects.some(x=>x.id===a.id)} className={answer.aspects.some(x=>x.id===a.id)?"choice selected":"choice"} onClick={()=>toggleAspect(a.id)}><span>{answer.aspects.some(x=>x.id===a.id)?"✓ ":"○ "}</span>{a.label}</button>)}
+        <button type="button" aria-pressed={answer.aspects.some(x=>x.id==="unsure")} className={answer.aspects.some(x=>x.id==="unsure")?"choice selected":"choice"} onClick={()=>toggleAspect("unsure")}>Not sure</button>
+       </div>
+       {answer.aspects.filter(a=>a.id!=="unsure").map(a=>{
+        const label=film.aspects.find(x=>x.id===a.id)?.label||a.id;
+        const selected=a.reactions||[];
+        const priorResponse=a.valence!==null?(typeof a.valence==="number"?ASPECT_LABELS[a.valence]:a.valence==="mixed"?"Mixed / conflicted":"Not sure"):null;
+        return <div className="aspect-reaction-card" key={a.id}>
+         <div className="aspect-reaction-heading">
+          <span className="eyebrow">YOUR REACTION TO</span>
+          <h4>{label}</h4>
+          <p>How did this aspect of the film affect you? Choose up to two.</p>
+         </div>
+         <div className="aspect-reaction-options">
+          {ASPECT_REACTIONS.map(r=>{
+           const chosen=selected.includes(r.id);
+           const exclusive=r.id==="unsure"||r.id==="didnt_resonate";
+           const atLimit=selected.filter(v=>v!=="unsure"&&v!=="didnt_resonate").length>=2;
+           return <button type="button" key={r.id} aria-pressed={chosen} disabled={!chosen&&!exclusive&&atLimit} className={chosen?"aspect-reaction-choice selected":"aspect-reaction-choice"} onClick={()=>toggleAspectReaction(a.id,r.id)}>
+            <span aria-hidden="true" className="aspect-reaction-emoji">{r.emoji}</span>
+            <span className="aspect-reaction-label">{r.label}</span>
+            {chosen?<span className="aspect-reaction-check" aria-hidden="true">✓</span>:null}
+           </button>;
+          })}
+         </div>
+         <div className="aspect-reaction-footer"><span>{selected.length?selected.length+" of 2 selected":"Choose your reaction"}</span>
+          {priorResponse?<span className="aspect-legacy-note">Prior slider answer preserved: {priorResponse}</span>:null}
+         </div>
+        </div>;
+       })}
       </div>
      </>:<div className="skip-message"><h3>That's completely fine.</h3><p>We will skip this film without treating it as a neutral or negative answer. You can watch it and return later to improve your profile.</p></div>}
      <div className="question-footer"><div><span className={"save-indicator "+saveState}>{saveState==="saving"?"● Saving answers...":saveState==="saved"?"✓ Saved privately":saveState==="error"?"⚠ Save failed. Make a new selection to retry.":"Your answers save automatically"}</span>{answer.status==="watched"&&!complete(answer)?<p className="hint">Complete every question to finish this film. You can return to drafts later.</p>:null}</div><div className="footer-actions"><button className="btn-secondary" onClick={()=>filmIndex>0?navigate(filmIndex-1):setTabSafe("home")}>← Back</button><button className="btn-primary" disabled={!complete(answer)} onClick={()=>filmIndex===currentFilms.length-1?setTabSafe("results"):navigate(filmIndex+1)}>{filmIndex===currentFilms.length-1?"See My Profile →":"Next Film →"}</button></div></div>
