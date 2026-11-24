@@ -76,7 +76,10 @@ export default function Constellation({people,onClose,onShare,initialMode}:Props
  const starList=useMemo(()=>people.flatMap(p=>p.profile.points.map((film,index)=>({key:p.id+":"+film.filmId,person:p,film,index}))),[people]);
  const films=useMemo(()=>FILMS.filter(f=>starList.some(s=>s.film.filmId===f.id)),[starList]);
  useEffect(()=>{if(!filmLens&&films.length)setFilmLens(films[0].id);},[films,filmLens]);
- useEffect(()=>{setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);},[]);
+ useEffect(()=>{setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  const previous=document.body.style.overflow;document.body.style.overflow="hidden";
+  return ()=>{document.body.style.overflow=previous;};
+ },[]);
  useEffect(()=>{const handler=(event:KeyboardEvent)=>{
   if(event.key==="Escape"){if(selected)setSelected(null);else onClose?.();}
   if(event.key.toLowerCase()==="r"&&!(event.target instanceof HTMLInputElement)){setCommand(c=>({id:c.id+1,kind:"reset"}));}
@@ -122,11 +125,16 @@ export default function Constellation({people,onClose,onShare,initialMode}:Props
   }catch{setNotice("A snapshot could not be captured on this device.");window.setTimeout(()=>setNotice(""),3500);}
  };
  const summary=present[0]?.profile;
+ const outliers=useMemo(()=>{
+  const profile=people[0]?.profile;if(!profile?.centroid)return [];
+  return profile.points.map(f=>({film:f,d:distance(f.point,profile.centroid!)}))
+   .sort((a,b)=>b.d-a.d).slice(0,2);
+ },[people]);
  return <div className="cosmos-portal" role="dialog" aria-modal="true" aria-label="Emotional Constellation immersive view">
   <div className="cosmos-aura" aria-hidden="true"/>
   <Scene nodes={nodes} centroids={centroids} selectedKey={selected} showLabels={labels&&(mode!=="compare"||people.length<=2)}
    showConnections={paths} autoRotate={autoRotate} reduceMotion={reduceMotion}
-   onSelect={key=>{setSelected(key);setTour(false);}} onHover={setHovered} command={command}/>
+   onSelect={key=>{if(key?.startsWith("centroid:")){setSelected(null);setShowInsights(true);}else setSelected(key);setTour(false);}} onHover={setHovered} command={command}/>
   <header className="cosmos-header">
    <div className="cosmos-ident"><span className="cosmos-symbol">✧</span><div><span className="cosmos-brand">THE HUYNH TEST</span><h1>Emotional <em>Constellation</em></h1></div></div>
    <div className="cosmos-header-right"><span className="cosmos-version">{summary?.stage==="expanded"?"EXPANDED":"CORE"} PROFILE · {summary?.completed||0} FILMS</span>
@@ -171,6 +179,9 @@ export default function Constellation({people,onClose,onShare,initialMode}:Props
      <h2>{summary?.headline||"Your universe starts here"}</h2>
      {showInsights?<><p>{summary?.narrative||"Complete a film to begin your constellation."}</p>
       {summary?AXES.map(axis=><div className="cosmos-axis-score" key={axis}><div><span>{AXIS_LABELS[axis]}</span><span>{summary.orientationScores[axis]??"—"}</span></div><div className="cosmos-track"><span style={{width:(summary.orientationScores[axis]||0)+"%",background:people[0]?.color||"#91c7ec"}}/></div></div>):null}
+      {outliers.length&&mode!=="film"?<div className="cosmos-outliers"><h3>Films farthest from your center</h3>
+       {outliers.map(({film})=><button key={film.filmId} onClick={()=>{setMode("constellation");setSelected(people[0].id+":"+film.filmId);}}>{film.title}<span>Explore ↗</span></button>)}
+      </div>:null}
       {mode==="compare"&&comparisons.length?<div className="cosmos-compare-insights"><h3>Shared film perspectives</h3>{comparisons.map(c=><div key={c.person.id}><strong>{c.person.name}</strong>{c.common>=2?<><p>{c.common} films assessed by both participants. Close responses: {c.aligned.join(", ")}. Most different responses: {c.divergent.join(", ")}.</p></>:<p>Not enough films in common for a comparison yet.</p>}</div>)}</div>:null}
       {mode==="film"?<div className="cosmos-film-picker"><label>Compare a film<select value={filmLens} onChange={e=>setFilmLens(e.target.value)}>{films.map(f=><option key={f.id} value={f.id}>{f.title}</option>)}</select></label></div>:null}
      </>:<p>Insights collapsed. Select any glowing point to explore it.</p>}

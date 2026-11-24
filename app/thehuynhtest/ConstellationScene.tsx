@@ -41,8 +41,10 @@ export default function ConstellationScene({nodes,centroids,selectedKey,showLabe
  const engine=useRef<Engine|null>(null);
  const onSelectRef=useRef(onSelect),onHoverRef=useRef(onHover);
  const selectedRef=useRef<string|null>(selectedKey);
+ const reducedRef=useRef(reduceMotion);
  const [fallback,setFallback]=useState(false);
  useEffect(()=>{onSelectRef.current=onSelect;onHoverRef.current=onHover;selectedRef.current=selectedKey;},[onSelect,onHover,selectedKey]);
+ useEffect(()=>{reducedRef.current=reduceMotion;},[reduceMotion]);
 
  useEffect(()=>{
   const element=host.current,screen=canvas.current,labelLayer=labels.current;
@@ -107,7 +109,7 @@ export default function ConstellationScene({nodes,centroids,selectedKey,showLabe
   let frame=0;
   const animate=()=>{
    frame=requestAnimationFrame(animate);items.frame=frame;
-   const motion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+   const motion=reducedRef.current||window.matchMedia("(prefers-reduced-motion: reduce)").matches;
    if(!motion)starfield.rotation.y+=.000035;
    for(const item of Array.from(items.entries.values())){
     item.group.position.lerp(item.target,motion?1:.083);
@@ -170,9 +172,11 @@ export default function ConstellationScene({nodes,centroids,selectedKey,showLabe
    const g=new THREE.Group();g.position.copy(toWorld(c.position));
    const halo=new THREE.Mesh(new THREE.TorusGeometry(.37,.012,5,56),new THREE.MeshBasicMaterial({color:c.color,transparent:true,opacity:.55,depthWrite:false}));g.add(halo);
    const diamond=new THREE.Mesh(new THREE.OctahedronGeometry(.16),new THREE.MeshBasicMaterial({color:c.color,wireframe:true,transparent:true,opacity:.9}));g.add(diamond);
+   const centroidHit=new THREE.Mesh(new THREE.SphereGeometry(.38,10,8),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));centroidHit.userData.key="centroid:"+c.id;g.add(centroidHit);
    e.centroidGroup.add(g);e.centroidEntries.set(c.id,g);
   }
   for(const child of [...e.lineGroup.children]){e.lineGroup.remove(child);freeObject(child);}
+  e.hitMeshes.push(...Array.from(e.centroidEntries.values()).map(g=>g.children.find(c=>c.userData.key?.startsWith("centroid:"))!).filter(Boolean));
   if(showConnections){
    for(const person of centroids){
     const relevant=nodes.filter(n=>n.personId===person.id);if(!relevant.length)continue;
