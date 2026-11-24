@@ -24,10 +24,10 @@ export const STILLS:Record<string,Still> = {
     "sourcePage": "https://www.space.com/the-matrix-movies-in-order"
   },
   "greenbook": {
-    "src": "https://kviff.tv/media/_cache/film_detail_cover/films/2019/09/18/Green-Book-car.jpg",
+    "src": "https://culturekit-assets.imgix.net/1/assets/cc12ff3d-b46d-4fd1-9b3d-c423bfa31d20.jpg?auto=format&fit=max&q=72&w=1200",
     "scene": "Tony and Don traveling together in a turquoise car",
-    "source": "KVIFF.TV",
-    "sourcePage": "https://kviff.tv/katalog/zelena-kniha"
+    "source": "Cineville",
+    "sourcePage": "https://cineville.nl/nl-NL/magazine/green-book-verzoening-voorspelling"
   },
   "spirited": {
     "src": "https://conteudo.imguol.com.br/c/entretenimento/a4/2020/01/20/cena-de-a-viagem-de-chihiro-2001-1579522908937_v2_900x506.jpg",
