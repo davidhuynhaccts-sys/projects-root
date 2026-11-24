@@ -26,6 +26,12 @@ const raw: Array<[string,string,number,string,string,[number,number,number,numbe
 export const FILMS: Film[] = raw.map(([id,title,year,color,category,weights,aspects])=>({
  id,title,year,color,category,weights,aspects:aspects.map(a=>{ const [id,label,axis]=a.split("|"); return {id,label,axis:axis as Axis}; })
 }));
+/** These 20 films and their order are the approved Version 2.0 lineup.
+ * Pilot 001 historical stills / excluded titles remain a separate legacy baseline. */
+export const CORE_FILMS:Film[] = FILMS.slice(0,10);
+export const EXPANDED_FILMS:Film[] = FILMS.slice(10);
+export const CORE_FILM_IDS = CORE_FILMS.map(f=>f.id);
+export const EXPANDED_FILM_IDS = EXPANDED_FILMS.map(f=>f.id);
 export const AXES: Axis[] = ["existential","moral","emotional","artistic"];
 export const AXIS_LABELS: Record<Axis,string> = {
  existential:"Existential & Philosophical",moral:"Moral & Social",emotional:"Emotional & Interpersonal",artistic:"Artistic & Narrative"
@@ -40,10 +46,19 @@ export const QUESTIONS = [
 export const ASPECT_LABELS = ["Very negative","Negative","A little negative","Neither positive nor negative","A little positive","Positive","Very positive"];
 export const RATINGS = [{n:1,emoji:"😖",label:"Terrible"},{n:2,emoji:"🙁",label:"Bad"},{n:3,emoji:"😐",label:"OK"},{n:4,emoji:"🙂",label:"Good"},{n:5,emoji:"🤩",label:"Amazing"}];
 export const TONES = [
- {id:"uplifting",label:"Uplifting",emoji:"😊"},
- {id:"difficult",label:"Difficult",emoji:"😔"},
- {id:"mixed",label:"Mixed / conflicted",emoji:"🥹"},
+ {id:"joyful",label:"Joyful / amused",emoji:"😊"},
+ {id:"hopeful",label:"Hopeful / uplifted",emoji:"🌤️"},
+ {id:"warm",label:"Warm / comforted",emoji:"🥰"},
+ {id:"sad",label:"Sad / melancholic",emoji:"😢"},
+ {id:"tense",label:"Tense / anxious",emoji:"😰"},
+ {id:"unsettled",label:"Disturbed / unsettled",emoji:"😨"},
+ {id:"angry",label:"Angry / frustrated",emoji:"😠"},
+ {id:"awed",label:"Awed / inspired",emoji:"✨"},
+ {id:"reflective",label:"Reflective / contemplative",emoji:"🤔"},
+ {id:"bittersweet",label:"Bittersweet",emoji:"🥹"},
+ {id:"mixed",label:"Mixed / conflicted",emoji:"🌗"},
  {id:"indifferent",label:"Indifferent",emoji:"😐"},
- {id:"unsure",label:"Not sure",emoji:"🤔"}
+ {id:"unsure",label:"Not sure",emoji:"❔"}
 ] as const;
-export const TEST_VERSION="2.0-pilot-1";
+export const LEGACY_TONE_LABELS:Record<string,string>={uplifting:"Uplifting (previous response)",difficult:"Difficult (previous response)"};
+export const TEST_VERSION="2.0-pilot-2";

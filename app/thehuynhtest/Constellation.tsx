@@ -1,6 +1,7 @@
 "use client";
 import { useMemo,useRef,useState } from "react";
 import type { Profile,FilmPoint } from "./lib/score";
+import {TONES,LEGACY_TONE_LABELS} from "./lib/data";
 type Person={id:string;name:string;color:string;profile:Profile};
 type Dot={person:Person;film:FilmPoint;x:number;y:number;z:number;radius:number};
 export default function Constellation({people}:{people:Person[]}){
@@ -32,7 +33,7 @@ export default function Constellation({people}:{people:Person[]}){
    </div>
   </div>
   <div className="constellation-legend">
-   {people.map(p=><div key={p.id}><span style={{background:p.color}}/>{p.name} <small>{p.profile.completed}/20 films</small></div>)}
+   {people.map(p=><div key={p.id}><span style={{background:p.color}}/>{p.name} <small>{p.profile.completed}/{p.profile.total} films · {p.profile.stage==="core"?"Core":"Expanded"}</small></div>)}
   </div>
   <svg className="starfield" viewBox="0 0 1000 620" role="img" aria-label="Interactive 3D projection of film response profiles. Drag to rotate and select movie points." onPointerDown={e=>{pointer.current={x:e.clientX,y:e.clientY};e.currentTarget.setPointerCapture(e.pointerId)}} onPointerMove={e=>{if(!pointer.current)return;const dx=e.clientX-pointer.current.x,dy=e.clientY-pointer.current.y;pointer.current={x:e.clientX,y:e.clientY};if(Math.abs(dx)+Math.abs(dy)>.5){setYaw(x=>x+dx*.008);setPitch(x=>Math.max(-1.35,Math.min(1.35,x+dy*.008)));}}} onPointerUp={()=>{pointer.current=null}} onPointerCancel={()=>{pointer.current=null}}>
    <defs><radialGradient id="ht-space"><stop offset="0%" stopColor="#182641"/><stop offset="100%" stopColor="#080c17"/></radialGradient></defs>
@@ -51,7 +52,7 @@ export default function Constellation({people}:{people:Person[]}){
    })}
    <text x="26" y="593" fill="#8b9ab2" fontSize="13">Drag to rotate · Select a movie to inspect · Same coordinate system for everyone</text>
   </svg>
-  {selected?<div className="selected-star"><span style={{background:selected.person.color}} className="dot-mini"/><div><strong>{selected.film.title}</strong><p>{selected.person.name} · {selected.film.rating===5?"🤩 Amazing":selected.film.rating===4?"🙂 Good":selected.film.rating===3?"😐 OK":selected.film.rating===2?"🙁 Bad":"😖 Terrible"} · {selected.film.tone==="mixed"?"Mixed / conflicted":selected.film.tone}{selected.film.mixed?" · Mixed aspects noted":""}</p></div><button type="button" onClick={()=>setPicked(null)}>Close</button></div>:null}
+  {selected?<div className="selected-star"><span style={{background:selected.person.color}} className="dot-mini"/><div><strong>{selected.film.title}</strong><p>{selected.person.name} · {selected.film.rating===5?"🤩 Amazing":selected.film.rating===4?"🙂 Good":selected.film.rating===3?"😐 OK":selected.film.rating===2?"🙁 Bad":"😖 Terrible"} · {selected.film.tones.map(t=>TONES.find(o=>o.id===t)?.label||LEGACY_TONE_LABELS[t]||t).join(", ")||"Not sure"}{selected.film.mixed?" · Mixed aspects noted":""}</p></div><button type="button" onClick={()=>setPicked(null)}>Close</button></div>:null}
   <p className="fine-print">Pilot visualization uses a fixed projection of four provisional orientation dimensions into 3D. Proximity illustrates the current model, not a validated psychological similarity measure.</p>
  </section>;
 }
