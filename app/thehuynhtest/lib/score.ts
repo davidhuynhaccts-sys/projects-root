@@ -139,9 +139,9 @@ export function scoreProfile(answers:Record<string,FilmAnswer>,expanded=false):P
   if(!response||response.status!=="watched"||!complete(response))continue;
   // Count each reaction at most once per film, even if chosen for two aspects.
   const seen=new Set(response.aspects.flatMap(item=>item.reactions||[]).filter(id=>id!=="unsure"&&id!=="didnt_resonate"));
-  for(const id of seen)reactionFilmCounts.set(id,(reactionFilmCounts.get(id)||0)+1);
+  for(const id of Array.from(seen))reactionFilmCounts.set(id,(reactionFilmCounts.get(id)||0)+1);
  }
- const prominent=[...reactionFilmCounts].sort((a,b)=>b[1]-a[1])[0];
+ const prominent=Array.from(reactionFilmCounts.entries()).sort((a,b)=>b[1]-a[1])[0];
  const reactionLabel=prominent?ASPECT_REACTIONS.find(r=>r.id===prominent[0])?.label:null;
  const reactionInsight=prominent&&reactionLabel&&prominent[1]>=2?
   " In "+prominent[1]+" different films, you selected \""+reactionLabel+"\" to describe how a particular detail affected you." : "";
