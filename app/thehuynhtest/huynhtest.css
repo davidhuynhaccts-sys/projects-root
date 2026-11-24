@@ -283,3 +283,18 @@
 .auth-choice button.selected{background:#304963;color:#e9f7ff;box-shadow:0 1px 9px #03081445}
 .auth-choice button:not(.selected):hover{color:#fff;background:#1e3045}
 @media(max-width:760px){.film-hero .film-still-credit{font-size:9px;right:12px;bottom:9px;max-width:115px}.film-hero h2{max-width:75%}}
+
+/* Progressive Core / Expanded experience, with fixed multi-tone choices. */
+.huynh-app .tone-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.huynh-app .tone{position:relative;min-height:88px;padding:13px 6px}
+.huynh-app .tone small{font-size:11px;line-height:1.35}
+.huynh-app .tone .tone-check{position:absolute;right:7px;top:5px;font-size:12px;color:#d7f4ff}
+.huynh-app .tone[disabled]{opacity:.45}
+.huynh-app .tone-count{font-size:11px;color:#aed4ed;margin:10px 0 0;text-align:right}
+.huynh-app .legacy-tone-note{padding:10px 12px;background:#1e314a;border:1px solid #456382;border-radius:8px}
+.huynh-app .stage-invitation{margin:18px 0 20px;background:radial-gradient(ellipse at top right,#273b54,#151f30 68%);border-color:#597b98}
+.huynh-app .stage-invitation h3,.huynh-app .deep-review-preview h3{font-family:'Playfair Display',Georgia,serif;font-weight:500;font-size:26px}
+.huynh-app .stage-invitation p,.huynh-app .deep-review-preview p{max-width:690px}
+.huynh-app .deep-review-preview{margin:17px 0 20px;border-style:dashed}
+@media(max-width:760px){.huynh-app .tone-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:400px){.huynh-app .tone-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
