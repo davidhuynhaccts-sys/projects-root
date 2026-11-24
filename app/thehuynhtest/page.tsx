@@ -178,6 +178,22 @@ export default function HuynhTest(){
  {tab==="results"?<>
   <section className="results-intro"><div className="eyebrow">YOUR {expanded?"EXPANDED":"CORE"} MOVIE PERSONALITY PROFILE · EXPLORATORY PILOT</div><h1>{profile.headline}<span className="accent-star"> ✺</span></h1><p>{profile.narrative}</p><div className="result-count"><span>{profile.completed} / {profile.total} films assessed</span><span>{profile.incomplete?"PARTIAL FILM COVERAGE":"FULL FILM COVERAGE"}</span><span>PROVISIONAL SCORING</span></div></section>
   <Constellation people={[{id:"self",name:user.name,color:palette[0],profile}]}/>
+
+  {coreReady&&!expanded?<section className="ht-panel stage-invitation">
+    <div className="eyebrow">YOUR CORE PROFILE IS READY</div><h3>There is more to discover.</h3>
+    <p>Your first ten film responses and constellation are saved. Explore ten more approved films to give your Movie Personality Profile additional depth.</p>
+    <button className="btn-primary" onClick={startExpanded}>Deepen My Profile · 10 More Films →</button>
+    <p className="fine-print">Completely optional. Your Core Profile remains available and your earlier responses stay intact.</p>
+   </section>:null}
+  {expanded&&coreReady?<section className="ht-panel stage-invitation">
+    <div className="eyebrow">EXPANDED PROFILE</div><h3>{expandedReady?"You've explored all twenty films.":"Your second constellation is growing."}</h3>
+    <p>{expandedReady?"Explore your expanded responses and compare your constellation with friends.":"Your original ten-film results are saved. Continue with the second set of ten films whenever you like."}</p>
+    {!expandedReady?<button className="btn-primary" onClick={()=>{const i=EXPANDED_FILMS.findIndex(f=>!(ref.current[f.id]&&complete(ref.current[f.id])));navigate(i<0?10:i+10);}}>Continue Expanded Test →</button>:null}
+   </section>:null}
+  <section className="ht-panel deep-review-preview"><div className="eyebrow">DEEP PROFILE · FUTURE</div>
+   <h3>Beyond ratings: your own reflections.</h3>
+   <p>Written reviews will eventually add richer context to your film interpretations and emotional patterns. This feature is not yet active.</p>
+  </section>
   <div className="results-grid">
    <div className="ht-panel"><div className="eyebrow">FOUR CORE ORIENTATIONS</div><h3>Your response patterns</h3><p className="hint">These scores summarize engagement with themes, not intelligence, morality, or fixed personality traits.</p>{AXES.map(ax=><div className="orientation" key={ax}><div><span>{AXIS_LABELS[ax]}</span><strong>{profile.orientationScores[ax]===null?"—":profile.orientationScores[ax]}</strong></div><div className="progress-meter"><span style={{width:(profile.orientationScores[ax]||0)+"%"}}/></div></div>)}</div>
    <div className="ht-panel"><div className="eyebrow">PROFILE COVERAGE</div><h3>Built from your own answers.</h3><p>You have completed {profile.completed} film assessments and skipped {profile.skipped}. Every point comes from a specific response, not an invented answer.</p><p className="hint">Your scores and narrative may change as you add films. The current scoring model is exploratory and has not been psychometrically validated.</p><button className="btn-secondary" onClick={()=>setTabSafe("test")}>Review and complete films ↗</button></div>
