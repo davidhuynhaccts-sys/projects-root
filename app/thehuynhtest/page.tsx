@@ -3,13 +3,14 @@ import {useEffect,useLayoutEffect,useMemo,useRef,useState} from "react";
 import {FILMS,QUESTIONS,RATINGS,TONES,ASPECT_LABELS,AXES,AXIS_LABELS,TEST_VERSION} from "./lib/data";
 import {complete,freshAnswer,normalizeAnswer,scoreProfile,type FilmAnswer,type Profile} from "./lib/score";
 import Constellation from "./Constellation";
+import {STILLS} from "./lib/stills";
 const BASE="/thehuynhtest";
 type User={id:string;handle:string;name:string;createdAt:number;shareEnabled:boolean};
 type Friend={id:string;name:string;handle:string;profile:Profile};
 type Tab="home"|"test"|"results"|"friends";
 const palette=["#97cced","#fab67e","#b49be2","#81c8b1","#f0a8bc","#e8d17b","#93a4dc","#adce9f","#c5a3c8"];
 export default function HuynhTest(){
- const [loading,setLoading]=useState(true),[user,setUser]=useState<User|null>(null),[authMode,setAuthMode]=useState<"login"|"register">("register");
+ const [loading,setLoading]=useState(true),[user,setUser]=useState<User|null>(null),[authMode,setAuthMode]=useState<"login"|"register">("login");
  const [handle,setHandle]=useState(""),[password,setPassword]=useState(""),[displayName,setDisplayName]=useState("");
  const [authError,setAuthError]=useState(""),[authBusy,setAuthBusy]=useState(false);
  const [tab,setTab]=useState<Tab>("home"),[filmIndex,setFilmIndex]=useState(0),[answers,setAnswers]=useState<Record<string,FilmAnswer>>({});
@@ -95,15 +96,16 @@ export default function HuynhTest(){
    <div id="how" className="ht-how"><div><strong>01</strong><span>Experience 20 films through a few thoughtful questions.</span></div><div><strong>02</strong><span>Explore your provisional Movie Personality Profile.</span></div><div><strong>03</strong><span>Share your constellation and compare it with friends.</span></div></div>
   </div>
   <form className="ht-auth" onSubmit={submitAuth}>
+   <div className="auth-choice" role="group" aria-label="Account access"><button type="button" aria-pressed={authMode==="login"} className={authMode==="login"?"selected":""} onClick={()=>{setAuthMode("login");setAuthError("");}}>Sign In</button><button type="button" aria-pressed={authMode==="register"} className={authMode==="register"?"selected":""} onClick={()=>{setAuthMode("register");setAuthError("");}}>Create Account</button></div>
    <div className="eyebrow">YOUR PERSONAL MOVIE UNIVERSE</div><h2>{authMode==="register"?"Begin your journey":"Welcome back"}</h2>
    <p>{authMode==="register"?"Create a private account. Your responses will be saved so you can return whenever you like.":"Sign in to return to your saved answers and shared constellation."}</p>
    {authMode==="register"?<label>Display name<input required minLength={2} maxLength={60} value={displayName} onChange={e=>setDisplayName(e.target.value)} placeholder="What should friends call you?"/></label>:null}
-   <label>Handle<input required minLength={3} maxLength={24} value={handle} onChange={e=>setHandle(e.target.value)} placeholder="your_handle" autoComplete="username"/></label>
+   <label>Handle (your unique username, not display name)<input required minLength={3} maxLength={24} value={handle} onChange={e=>setHandle(e.target.value)} placeholder="Enter your handle" autoComplete="username"/></label>
    <label>Password<input required type="password" minLength={authMode==="register"?12:1} maxLength={128} autoComplete={authMode==="register"?"new-password":"current-password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder={authMode==="register"?"At least 12 characters":"Your password"}/></label>
    {authError?<p className="error" role="alert">{authError}</p>:null}
    <button disabled={authBusy} className="btn-primary" type="submit">{authBusy?"Connecting...":authMode==="register"?"Create my account →":"Sign in →"}</button>
    <button className="swap-auth" type="button" onClick={()=>{setAuthMode(authMode==="register"?"login":"register");setAuthError("");}}>{authMode==="register"?"Already have an account? Sign in":"New here? Create an account"}</button>
-   <p className="fine-print">Your results are private unless you turn on sharing. Pilot accounts currently use a handle and password; password recovery by email is not yet available.</p>
+   <p className="fine-print">Returning participants: sign in with the handle you created, not your display name. Passwords are case-sensitive. Your results are private unless you turn on sharing. Password recovery by email is not yet available.</p>
   </form>
  </main>:<main className="ht-main">
  {tab==="home"?<>
@@ -114,14 +116,14 @@ export default function HuynhTest(){
    <div className="ht-panel friends-teaser"><div className="eyebrow">SHARED PERSPECTIVES</div><h3>See the same films<br/>through new eyes.</h3><p>Compare the emotional constellations of friends who choose to share their results.</p><button className="btn-secondary" onClick={()=>setTabSafe("friends")}>Connect with friends ↗</button></div>
   </div>
   <div className="section-heading"><h2>Twenty films, twenty lenses</h2><span>Choose any film to revisit your answers</span></div>
-  <div className="film-grid">{FILMS.map((f,i)=>{const a=answers[f.id];const done=Boolean(a&&complete(a));return <button key={f.id} className="film-tile" onClick={()=>navigate(i)} style={{background:"linear-gradient(140deg, "+f.color+"24,#141a29 75%)"}}><span className="film-number">{String(i+1).padStart(2,"0")}</span><span className="film-tile-title">{f.title}</span><span className="film-year">{f.year}</span><span className={"film-status "+(done?"done":"")}>{done?a.status==="watched"?"✓ Completed":"↗ Skipped":"Not started"}</span></button>})}</div>
+  <div className="film-grid">{FILMS.map((f,i)=>{const a=answers[f.id];const done=Boolean(a&&complete(a));return <button key={f.id} className="film-tile" onClick={()=>navigate(i)} style={{background:"linear-gradient(140deg, "+f.color+"24,#141a29 75%)"}}><img className="film-tile-still" src={STILLS[f.id]?.src} alt="" loading="lazy" referrerPolicy="no-referrer" onError={e=>{e.currentTarget.style.display="none"}}/><span className="film-number">{String(i+1).padStart(2,"0")}</span><span className="film-tile-title">{f.title}</span><span className="film-year">{f.year}</span><span className={"film-status "+(done?"done":"")}>{done?a.status==="watched"?"✓ Completed":"↗ Skipped":"Not started"}</span></button>})}</div>
  </>:null}
  {tab==="test"?<>
   <section className="test-bar"><div><div className="eyebrow">THE QUICK TEST · {TEST_VERSION.toUpperCase()}</div><h1>Film {String(filmIndex+1).padStart(2,"0")} <span>/ 20</span></h1></div><div><span>{activeFilmCount} of 20 addressed</span><div className="progress-meter"><span style={{width:(activeFilmCount/20*100)+"%"}}/></div></div></section>
   <div className="test-layout">
    <aside className="test-sidebar"><div className="eyebrow">YOUR FILMS</div>{FILMS.map((f,i)=>{const a=answers[f.id];const done=a&&complete(a);return <button key={f.id} className={i===filmIndex?"selected":""} onClick={()=>navigate(i)}><span>{String(i+1).padStart(2,"0")}</span><strong>{f.title}</strong><span className={done?"dot completed":"dot"}>{done?"✓":"·"}</span></button>})}</aside>
    <div className="question-panel">
-    <div id="ht-current-film-hero" className="film-hero" style={{background:"radial-gradient(ellipse at 68% 30%, "+film.color+"70, transparent 65%),linear-gradient(135deg,#172338,#0d1322)"}}><div className="film-watermark">✺</div><span className="eyebrow">FILM {String(filmIndex+1).padStart(2,"0")} OF 20</span><h2>{film.title}</h2><p>{film.year} · {film.category}</p></div>
+    <div id="ht-current-film-hero" className="film-hero" style={{background:"radial-gradient(ellipse at 68% 30%, "+film.color+"70, transparent 65%),linear-gradient(135deg,#172338,#0d1322)"}}><img className="film-still" src={STILLS[film.id]?.src} alt={STILLS[film.id]?.scene||film.title+" film still"} loading="eager" referrerPolicy="no-referrer" onError={e=>{e.currentTarget.style.display="none"}}/><div className="film-watermark">✺</div><span className="eyebrow">FILM {String(filmIndex+1).padStart(2,"0")} OF 20</span><h2>{film.title}</h2><p>{film.year} · {film.category}</p><a className="film-still-credit" href={STILLS[film.id]?.sourcePage} target="_blank" rel="noopener noreferrer">Film still: {STILLS[film.id]?.source}</a></div>
     <div className="question-content">
      <div className="status-question"><h3>Have you watched this movie, and do you remember it?</h3><div className="chip-row">{[{id:"watched",label:"Yes, I'm familiar"},{id:"unwatched",label:"Have not watched"},{id:"unfamiliar",label:"Unfamiliar / don't remember"}].map(o=><button key={o.id} className={answer.status===o.id?"choice selected":"choice"} onClick={()=>change({status:o.id as FilmAnswer["status"]})}>{o.label}</button>)}</div></div>
      {answer.status==="watched"?<>
