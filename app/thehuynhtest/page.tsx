@@ -39,7 +39,7 @@ export default function HuynhTest(){
  }
  useEffect(()=>{initialize();return ()=>{if(timer.current)clearTimeout(timer.current)};},[]);
  const persist=(id:string,a:FilmAnswer)=>{
-  const task=queue.current.catch(()=>{}).then(()=>request("/api/state",{method:"PUT",body:JSON.stringify({filmId:id,answer:a})}));
+  const task=queue.current.catch(()=>{}).then(()=>request("/api/state",{method:"PUT",keepalive:true,body:JSON.stringify({filmId:id,answer:a})}));
   queue.current=task;task.then(()=>setSaveState("saved")).catch(()=>setSaveState("error"));
   return task;
  };
@@ -57,7 +57,7 @@ export default function HuynhTest(){
  };
  const navigate=(idx:number)=>{flush();setFilmIndex(Math.max(0,Math.min(FILMS.length-1,idx)));setTab("test");window.scrollTo({top:0,behavior:"smooth"});};
  const setTabSafe=(next:Tab)=>{flush();setTab(next);window.scrollTo({top:0,behavior:"smooth"});if(next==="friends")loadFriends();};
- useEffect(()=>{const onHide=()=>{if(document.visibilityState==="hidden")flush()};document.addEventListener("visibilitychange",onHide);return()=>document.removeEventListener("visibilitychange",onHide);});
+ useEffect(()=>{const onHide=()=>{if(document.visibilityState==="hidden")flush()};document.addEventListener("visibilitychange",onHide);window.addEventListener("pagehide",flush);return()=>{document.removeEventListener("visibilitychange",onHide);window.removeEventListener("pagehide",flush);};});
  async function submitAuth(e:React.FormEvent){
   e.preventDefault();setAuthBusy(true);setAuthError("");
   try{const a=await request("/api/account",{method:"POST",body:JSON.stringify({action:authMode,handle,password,name:displayName})});
