@@ -16,7 +16,7 @@ const mostConnected=(profile:Profile,axis:Axis)=>profile.points.filter(p=>p.evid
 const rank=(profile:Profile)=>AXES.filter(a=>profile.orientationScores[a]!==null).sort((a,b)=>(profile.orientationScores[b]||0)-(profile.orientationScores[a]||0));
 const toneCounts=(points:FilmPoint[])=>{
  const counts=new Map<string,number>();
- for(const film of points)for(const tone of new Set(film.tones)){if(tone!=="unsure")counts.set(tone,(counts.get(tone)||0)+1);}
+ for(const film of points)for(const tone of Array.from(new Set(film.tones))){if(tone!=="unsure")counts.set(tone,(counts.get(tone)||0)+1);}
  return Array.from(counts).sort((a,b)=>b[1]-a[1]);
 };
 const dist=(a:[number,number,number],b:[number,number,number])=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
