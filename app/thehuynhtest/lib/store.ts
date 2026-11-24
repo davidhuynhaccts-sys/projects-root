@@ -100,5 +100,5 @@ export async function listFriends(uid:string):Promise<string[]>{
  return (await redisDb().get<string[]>("ht:friends:"+uid))||[];
 }
 export async function saveFriends(uid:string,ids:string[]){
- await redisDb().set("ht:friends:"+uid,[...new Set(ids)].slice(0,8));
+ await redisDb().set("ht:friends:"+uid,Array.from(new Set(ids)).slice(0,8));
 }
