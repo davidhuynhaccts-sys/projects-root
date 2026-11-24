@@ -2,7 +2,7 @@ import { FILMS,AXES,AXIS_LABELS,TEST_VERSION,type Axis,type Film } from "./data"
 export type AnswerStatus = "watched" | "unwatched" | "unfamiliar";
 export type AspectAnswer = { id:string; valence:number|"mixed"|"unsure"|null };
 export type FilmAnswer = { status:AnswerStatus; rating:number|null; tone:string|null; sliders:(number|null)[]; aspects:AspectAnswer[]; updatedAt?:number };
-export type FilmPoint = {filmId:string;title:string;rating:number;tone:string;vector:[number,number,number,number];point:[number,number,number];selectedAspects:string[]};
+export type FilmPoint = {filmId:string;title:string;rating:number;tone:string;vector:[number,number,number,number];point:[number,number,number];selectedAspects:string[];mixed:boolean;evidence:[boolean,boolean,boolean,boolean]};
 export type Profile = {version:string;completed:number;skipped:number;total:number;incomplete:boolean;orientationScores:Record<Axis,number|null>;points:FilmPoint[];centroid:[number,number,number]|null;headline:string;narrative:string;topFilms:string[];coveredOrientations:Axis[]};
 export const EMPTY_ANSWER:FilmAnswer={status:"watched",rating:null,tone:null,sliders:[null,null,null,null,null],aspects:[]};
 export function freshAnswer():FilmAnswer { return {status:"watched",rating:null,tone:null,sliders:[null,null,null,null,null],aspects:[]}; }
@@ -30,47 +30,75 @@ export function project(vector:[number,number,number,number]):[number,number,num
  const [e,m,h,a]=vector;
  return [+(a-e).toFixed(4),+(h-m).toFixed(4),+((e+m+h+a-2)/2).toFixed(4)];
 }
-function scoreFilm(film:Film,a:FilmAnswer):FilmPoint {
+function scoreFilm(film:Film,a:FilmAnswer):FilmPoint|null {
  const s=a.sliders.map(normal);
- // Missing/Not sure answers contribute no evidence rather than a fictitious neutral response.
- const value=(i:number)=>s[i]===null?.5:s[i] as number;
- const input:[number,number,number,number]=[
-  .25*value(0)+.75*value(4),
-  .28*value(1)+.25*value(4)+.47*value(0),
-  .55*value(1)+.45*value(0),
-  .56*value(3)+.44*value(2)
+ // Uncertain answers are absent evidence, not artificial neutral observations.
+ const weighted=(items:Array<[number,number]>):number|null=>{
+  let total=0,weight=0;
+  for(const [idx,w] of items)if(s[idx]!==null){total+=(s[idx] as number)*w;weight+=w;}
+  return weight?total/weight:null;
+ };
+ const standard=[
+  weighted([[0,.25],[4,.75]]),
+  weighted([[1,.28],[4,.25],[0,.47]]),
+  weighted([[1,.55],[0,.45]]),
+  weighted([[3,.56],[2,.44]])
  ];
- const aspectSum=[0,0,0,0];let chosen=0;
+ const sums=[0,0,0,0];let selectedCount=0;
+ let signedSum=0,signedCount=0,hasMixed=a.tone==="mixed";
  for(const item of a.aspects){
-  const found=film.aspects.find(x=>x.id===item.id);
-  if(!found||item.valence==="unsure"||item.valence===null)continue;
-  const axisIndex=AXES.indexOf(found.axis);
+  const selected=film.aspects.find(x=>x.id===item.id);
+  if(!selected||item.valence===null||item.valence==="unsure")continue;
+  const i=AXES.indexOf(selected.axis);
   const strength=item.valence==="mixed"?1:(.45+.55*Math.abs(item.valence-3)/3);
-  aspectSum[axisIndex]+=strength;chosen++;
+  sums[i]+=strength;selectedCount++;
+  if(item.valence==="mixed")hasMixed=true;
+  if(typeof item.valence==="number"){signedSum+=(item.valence-3)/3;signedCount++;}
  }
- const v=input.map((base,i)=>{
-  const salience=chosen?aspectSum[i]/chosen:base;
-  const relevance=film.weights[i];
-  return clamp((.64*base+.36*salience)*(.55+.45*relevance));
+ const evidence=standard.map((base,i)=>base!==null||sums[i]>0) as [boolean,boolean,boolean,boolean];
+ if(!evidence.some(Boolean))return null;
+ const vector=standard.map((base,i)=>{
+  const aspect=sums[i]>0?sums[i]/Math.max(1,selectedCount):null;
+  const value=base===null?aspect:aspect===null?base:.64*base+.36*aspect;
+  if(value===null)return 0; // Undefined dimension is flagged, never scored as zero.
+  return clamp(value*(.55+.45*film.weights[i]));
  }) as [number,number,number,number];
- return {filmId:film.id,title:film.title,rating:a.rating||3,tone:a.tone||"unsure",vector:v,point:project(v),selectedAspects:a.aspects.map(x=>x.id)};
+ const ratingValence=((a.rating||3)-3)/2;
+ const aspectValence=signedCount?signedSum/signedCount:null;
+ const toneValence=a.tone==="uplifting"?.7:a.tone==="difficult"?-.7:a.tone==="indifferent"?0:null;
+ // Positive and negative judgments separate along depth; mixed is additionally marked.
+ const opinion=.55*ratingValence+.3*(aspectValence??ratingValence)+.15*(toneValence??0);
+ const base=project(vector);
+ const point:[number,number,number]=[base[0],base[1],+opinion.toFixed(4)];
+ return {filmId:film.id,title:film.title,rating:a.rating||3,tone:a.tone||"unsure",vector,point,selectedAspects:a.aspects.map(x=>x.id),mixed:hasMixed,evidence};
 }
 export function scoreProfile(answers:Record<string,FilmAnswer>):Profile {
- const points:FilmPoint[]=[];let skipped=0;
- for(const film of FILMS){const a=answers[film.id];if(!a)continue;if(a.status!=="watched"){skipped++;continue;}if(complete(a))points.push(scoreFilm(film,a));}
- const count=points.length;
- const dims=AXES.map((_,i)=>count?points.reduce((sum,p)=>sum+p.vector[i],0)/count:null);
+ const points:FilmPoint[]=[];let skipped=0,completed=0;
+ for(const film of FILMS){
+  const a=answers[film.id];if(!a)continue;
+  if(a.status!=="watched"){skipped++;continue;}
+  if(!complete(a))continue;
+  completed++;
+  const point=scoreFilm(film,a);if(point)points.push(point);
+ }
+ const dims=AXES.map((_,i)=>{
+  const supported=points.filter(p=>p.evidence[i]);
+  return supported.length?supported.reduce((sum,p)=>sum+p.vector[i],0)/supported.length:null;
+ });
  const orientationScores=Object.fromEntries(AXES.map((axis,i)=>[axis,dims[i]===null?null:Math.round((dims[i] as number)*100)])) as Record<Axis,number|null>;
- const ranked=AXES.map((axis,i)=>({axis,value:dims[i]||0})).sort((a,b)=>b.value-a.value);
- const topFilms=points.slice().sort((a,b)=>(b.vector[AXES.indexOf(ranked[0].axis)]-a.vector[AXES.indexOf(ranked[0].axis)])).slice(0,3).map(x=>x.title);
- const top=ranked[0]?.axis||"existential";const second=ranked[1]?.axis||"emotional";
+ const ranked=AXES.map((axis,i)=>({axis,value:dims[i]})).filter(x=>x.value!==null).sort((a,b)=>(b.value as number)-(a.value as number));
+ const top=ranked[0]?.axis||"existential";
+ const second=ranked[1]?.axis||top;
+ const topFilms=points.filter(p=>p.evidence[AXES.indexOf(top)]).sort((a,b)=>b.vector[AXES.indexOf(top)]-a.vector[AXES.indexOf(top)]).slice(0,3).map(x=>x.title);
  const titleWords:Record<Axis,string>={existential:"Reflective Explorer",moral:"Social Observer",emotional:"Empathetic Connector",artistic:"Creative Interpreter"};
- const headline=count?titleWords[top]:"Your constellation begins here";
- const narrative=count
- ? "Your completed film responses place the strongest emphasis on "+AXIS_LABELS[top].toLowerCase()+", with "+AXIS_LABELS[second].toLowerCase()+" also present. These patterns describe what you engaged with across these films, not a fixed personality trait. "+(topFilms.length?"Films contributing examples include "+topFilms.join(", ")+". ":"")+(count<20?"Your profile is incomplete and may change as you assess more films.":"You have assessed all twenty films.")
- : "Complete a familiar movie to begin an exploratory Movie Personality Profile. There are no correct tastes or interpretations.";
- const centroid: [number,number,number]|null =count?project(dims.map(x=>x||0) as [number,number,number,number]):null;
- const coveredOrientations=AXES.filter((ax,i)=>points.some(p=>p.vector[i]>.28));
- return {version:TEST_VERSION,completed:count,skipped,total:FILMS.length,incomplete:count<FILMS.length,orientationScores,points,centroid,headline,narrative,topFilms,coveredOrientations};
+ const headline=ranked.length?titleWords[top]:"Your constellation begins here";
+ const narrative=ranked.length
+ ? "Your completed film responses place the strongest emphasis on "+AXIS_LABELS[top].toLowerCase()+(ranked.length>1?", with "+AXIS_LABELS[second].toLowerCase()+" also present":"")+". These patterns describe what you engaged with across these films, not a fixed personality trait. "+(topFilms.length?"Films contributing examples include "+topFilms.join(", ")+". ":"")+(completed<20?"Your profile is incomplete and may change as you assess more films.":"You have assessed all twenty films.")
+ : completed?"You completed films but marked their scoring questions as uncertain. Your responses are saved, but there is not yet enough evidence for orientation scores.":"Complete a familiar movie to begin an exploratory Movie Personality Profile. There are no correct tastes or interpretations.";
+ const centroid:[number,number,number]|null=points.length?[
+  ...([0,1,2].map(i=>+(points.reduce((sum,p)=>sum+p.point[i],0)/points.length).toFixed(4)) as [number,number,number])
+ ]:null;
+ const coveredOrientations=ranked.map(x=>x.axis);
+ return {version:TEST_VERSION,completed,skipped,total:FILMS.length,incomplete:completed<FILMS.length,orientationScores,points,centroid,headline,narrative,topFilms,coveredOrientations};
 }
 export function sharedProfile(profile:Profile) {return {version:profile.version,completed:profile.completed,total:profile.total,incomplete:profile.incomplete,orientationScores:profile.orientationScores,points:profile.points,centroid:profile.centroid,headline:profile.headline,narrative:profile.narrative};}
