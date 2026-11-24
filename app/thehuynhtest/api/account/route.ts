@@ -23,10 +23,10 @@ export async function POST(request:NextRequest){
    if(password.length<12)return NextResponse.json({error:"Use a password of at least 12 characters."},{status:400});
    if(name.length<2||name.length>60)return NextResponse.json({error:"Enter a display name of 2–60 characters."},{status:400});
    user=await register(handle,name,password);
-   if(!user)return NextResponse.json({error:"That handle is already taken."},{status:409});
+   if(!user)return NextResponse.json({error:"That handle already has an account. Choose Sign In to access your saved test."},{status:409});
   }else{
    user=await findByHandle(handle);
-   if(!user||!comparePassword(password,user))return NextResponse.json({error:"Incorrect handle or password."},{status:401});
+   if(!user||!comparePassword(password,user))return NextResponse.json({error:"Sign-in details were not recognized. Use your account handle, not your display name, and check your password."},{status:401});
   }
   const token=await startSession(user);
   const response=NextResponse.json({user:safeUser(user)},{headers:noStore});
