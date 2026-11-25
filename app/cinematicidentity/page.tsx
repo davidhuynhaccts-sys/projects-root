@@ -98,7 +98,7 @@ function discoveryPlacement(f:Film,birth:number,p:Demographics|null,now:number):
  const rule=timelineRules[f.id];if(!rule)return null;
  const firstRelease=f.year+rule.lag,releaseAge=firstRelease-birth;
  // Film-specific primary audience bands, not viewing restrictions. Earlier films may be discovered through home media.
- const year=Math.max(firstRelease,releaseAge<rule.lo?birth+rule.peak:firstRelease);
+ const nearAudience=rule.kind!=="adult"&&releaseAge>=rule.lo-4;const discoveryAge=nearAudience?Math.min(rule.peak,rule.lo+1):rule.peak;const year=Math.max(firstRelease,releaseAge<rule.lo?birth+discoveryAge:firstRelease);
  const age=year-birth;
  if(year<=now&&age>=rule.lo){
   if(rule.kind==="family"&&age<=rule.hi)return {year,fit:16-Math.abs(age-rule.peak)*.9,familyContext:false};
@@ -157,7 +157,7 @@ function LifeTimeline({profile,history,entries,library,placements,onPlace,onPath
  <div className="ci-cinema-track">{chapters.map((ch,i)=>{
   const personal=items.filter(x=>x.year!==null&&x.year>=ch.from&&x.year<=ch.to);
   const candidates=suggestions.filter(x=>x.chapter===i&&!personalFilms.has(filmKey(x.film)));
-  const score=(x:typeof candidates[number])=>x.fit*1.5+popularity(x.film)-(Math.abs(x.year-(ch.from+ch.to)/2)*.15)+(x.later?-.5:1);
+  const score=(x:typeof candidates[number])=>x.fit*1.5+popularity(x.film)-(Math.abs(x.year-(ch.from+ch.to)/2)*.15)+(x.familyContext?2:Math.max(-3,4-(x.year-x.film.year)*.6));
   const ranked=[...candidates].sort((a,b)=>score(b)-score(a)||a.year-b.year);
   // A small selection per stage, rather than a catalog. Earlier classics can appear in later stages.
   const choices=showAll[i]?ranked:ranked.slice(0,4);
