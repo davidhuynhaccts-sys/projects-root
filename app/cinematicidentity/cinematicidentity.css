@@ -168,3 +168,36 @@
 .ci .ci-cinema-personal-film .ci-cinema-art{width:100%;aspect-ratio:16/9}
 @media(max-width:679px){.ci .ci-cinema-suggestion .ci-cinema-editorial{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.ci .ci-cinema-personal-film .ci-cinema-editorial{grid-template-columns:minmax(0,1fr);gap:15px}.ci .ci-cinema-personal-film .ci-cinema-art{aspect-ratio:16/10}}
 @media(prefers-reduced-motion:reduce){.ci .ci-cinema-card .ci-cinema-focus{opacity:1!important;transform:none!important;pointer-events:auto!important}}
+
+/* Compact chronological film rows. Fixed visual hierarchy; fade whole entries. */
+.ci .ci-cinema-card.ci-cinema-suggestion{width:min(100%,1040px);min-height:0;margin:0 auto 22px;padding:8px 0 14px}
+.ci .ci-cinema-suggestion .ci-cinema-editorial{grid-template-columns:minmax(0,3fr) minmax(0,7fr);gap:clamp(12px,3vw,36px)}
+.ci .ci-cinema-suggestion .ci-cinema-visual h3{font-size:clamp(17px,2.35vw,30px);margin:7px 0 2px}
+.ci .ci-cinema-suggestion .ci-cinema-date{font-size:10px;margin-bottom:9px}
+.ci .ci-cinema-suggestion .ci-cinema-copy p{font-size:clamp(12px,1.35vw,15px);margin:7px 0;line-height:1.55}
+.ci .ci-cinema-suggestion .ci-time-actions{margin-top:6px}
+.ci .ci-cinema-suggestion .ci-cinema-source{font-size:9px}
+.ci .ci-cinema-card.ci-cinema-personal{width:min(100%,1040px);min-height:0;margin:24px auto 32px;padding:12px 0}
+.ci .ci-cinema-personal .ci-cinema-editorial,.ci .ci-cinema-personal-film .ci-cinema-editorial{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(14px,3vw,40px);align-items:start}
+.ci .ci-cinema-personal .ci-cinema-art{width:100%;aspect-ratio:16/10}
+.ci .ci-cinema-personal .ci-cinema-visual h3{font-size:clamp(22px,3.2vw,42px)}
+.ci .ci-cinema-personal .ci-cinema-focus{padding:15px 0 0}
+.ci .ci-cinema-personal blockquote{font-size:clamp(16px,1.8vw,23px);line-height:1.55;margin:8px 0 12px}
+.ci .ci-cinema-personal .ci-time-meta{margin:8px 0}
+.ci .ci-cinema-personal .ci-cinema-event-glyph{aspect-ratio:16/5}
+.ci .ci-cinema-chapter{padding-top:48px;padding-bottom:28px}
+.ci .ci-cinema-chapter-heading{margin-bottom:24px}
+.ci .ci-space-inspect{scroll-margin:24px}
+@media(max-width:679px){
+ .ci .ci-cinema-card.ci-cinema-suggestion{margin-bottom:13px;padding:3px 0 12px}
+ .ci .ci-cinema-suggestion .ci-cinema-editorial{grid-template-columns:minmax(0,3fr) minmax(0,7fr);gap:10px}
+ .ci .ci-cinema-suggestion .ci-cinema-visual h3{font-size:16px;line-height:1.13}
+ .ci .ci-cinema-suggestion .ci-cinema-copy p{font-size:12px;margin:5px 0}
+ .ci .ci-cinema-suggestion .ci-cinema-date{font-size:9px;margin-bottom:6px}
+ .ci .ci-cinema-card.ci-cinema-personal{margin:20px auto 24px;padding:6px 0 10px}
+ .ci .ci-cinema-personal .ci-cinema-editorial,.ci .ci-cinema-personal-film .ci-cinema-editorial{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+ .ci .ci-cinema-personal .ci-cinema-visual h3{font-size:clamp(20px,5vw,28px)}
+ .ci .ci-cinema-personal blockquote{font-size:14px}
+ .ci .ci-cinema-chapter{padding-top:38px;padding-bottom:18px}
+ .ci .ci-cinema-chapter-heading{margin-bottom:20px}
+}
