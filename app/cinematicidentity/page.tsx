@@ -132,7 +132,11 @@ function LifeTimeline({profile,history,entries,library,placements,onPlace,onExpl
   const el=root.current;if(!el)return;let raf=0,last=-2;
   const motion=window.matchMedia("(prefers-reduced-motion: reduce)");
   const update=()=>{raf=0;const center=window.innerHeight*.5,range=Math.max(240,window.innerHeight*.67);let nearest=Infinity,idx=-1;
-   el.querySelectorAll<HTMLElement>("[data-time-card]").forEach(card=>{const rect=card.getBoundingClientRect(),dist=Math.abs((rect.top+rect.bottom)/2-center),strength=Math.max(0,1-dist/range);const inner=card.querySelector<HTMLElement>(".ci-cinema-focus");if(inner){inner.style.setProperty("--focus",motion.matches?"1":String(strength));const personal=card.classList.contains("ci-cinema-personal");inner.style.setProperty("--art-scale",motion.matches?"1":String(personal ? .25+.75*strength : .5+.5*strength));inner.style.setProperty("--art-fade",motion.matches?"1":String(.38+.62*strength));inner.style.setProperty("--fade",motion.matches?"1":String(Math.min(1,Math.max(0,(strength-.18)/.82))));inner.style.setProperty("--detail-fade",motion.matches?"1":String(Math.pow(Math.min(1,Math.max(0,(strength-.18)/.82)),1.35)));inner.dataset.detailVisible=motion.matches||strength>.2?"yes":"no";inner.style.setProperty("--event-scale",motion.matches?"1":String(.65+.35*strength));inner.style.setProperty("--blur",motion.matches?"0px":String((1-strength)*3)+"px")}if(dist<nearest){nearest=dist;idx=Number(card.dataset.chapter??-1)}});
+   el.querySelectorAll<HTMLElement>("[data-time-card]").forEach(card=>{const rect=card.getBoundingClientRect(),dist=Math.abs((rect.top+rect.bottom)/2-center),strength=Math.max(0,1-dist/range);const inner=card.querySelector<HTMLElement>(".ci-cinema-focus");if(inner){// One opacity value for the entire composition; no independent image, title, text or link transitions.
+const opacity=motion.matches?1:Math.min(1,Math.max(0,(strength-.12)/.88));
+inner.style.setProperty("--entry-opacity",String(opacity));
+inner.dataset.entryVisible=opacity>.16?"yes":"no";
+}if(dist<nearest){nearest=dist;idx=Number(card.dataset.chapter??-1)}});
    if(idx!==last){last=idx;setActive(idx)}
   };
   const request=()=>{if(!raf)raf=window.requestAnimationFrame(update)};
@@ -452,5 +456,38 @@ export default function CinematicIdentity(){
 .ci .ci-cinema-personal .ci-time-edit label{width:100%}
 }
 @media(prefers-reduced-motion:reduce){.ci .ci-cinema-visual,.ci .ci-cinema-source,.ci .ci-cinema-copy,.ci .ci-cinema-date{transform:none!important;opacity:1!important}}
+
+/* Fixed image sizes, with one synchronized opacity transition per entry. */
+.ci .ci-cinema-card .ci-cinema-focus,
+.ci .ci-cinema-personal .ci-cinema-focus,
+.ci .ci-cinema-personal:not(.ci-cinema-personal-film) .ci-cinema-focus{
+ transform:none;opacity:var(--entry-opacity,1);will-change:opacity;transition:none;
+}
+.ci .ci-cinema-card .ci-cinema-visual,
+.ci .ci-cinema-card .ci-cinema-art,
+.ci .ci-cinema-card .ci-cinema-copy,
+.ci .ci-cinema-card .ci-cinema-source,
+.ci .ci-cinema-card .ci-cinema-date{
+ transform:none;opacity:1;transition:none;will-change:auto;
+}
+.ci .ci-cinema-card .ci-cinema-art img,
+.ci .ci-cinema-card .ci-cinema-focus:hover img,
+.ci .ci-cinema-card .ci-cinema-focus:focus-within img{
+ filter:none;transform:none;opacity:1;transition:none;
+}
+.ci .ci-cinema-card .ci-cinema-focus:focus-within{opacity:1;transform:none}
+.ci .ci-cinema-card .ci-cinema-focus[data-entry-visible="no"]:not(:focus-within){pointer-events:none}
+.ci .ci-cinema-card .ci-cinema-focus:focus-within,
+.ci .ci-cinema-card .ci-cinema-focus:focus-within .ci-cinema-copy,
+.ci .ci-cinema-card .ci-cinema-focus:focus-within .ci-cinema-source{pointer-events:auto;opacity:1}
+.ci .ci-cinema-suggestion .ci-cinema-editorial{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+/* A full-width personal image with its title and credit below; the complete
+   composition, including the longer reflection, fades together. */
+.ci .ci-cinema-personal-film .ci-cinema-editorial{grid-template-columns:minmax(0,1fr);gap:18px}
+.ci .ci-cinema-personal-film .ci-cinema-visual{width:100%}
+.ci .ci-cinema-personal-film .ci-cinema-copy{max-width:760px;margin:0}
+.ci .ci-cinema-personal-film .ci-cinema-art{width:100%;aspect-ratio:16/9}
+@media(max-width:679px){.ci .ci-cinema-suggestion .ci-cinema-editorial{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.ci .ci-cinema-personal-film .ci-cinema-editorial{grid-template-columns:minmax(0,1fr);gap:15px}.ci .ci-cinema-personal-film .ci-cinema-art{aspect-ratio:16/10}}
+@media(prefers-reduced-motion:reduce){.ci .ci-cinema-card .ci-cinema-focus{opacity:1!important;transform:none!important;pointer-events:auto!important}}
 `}</style></main>
 }
