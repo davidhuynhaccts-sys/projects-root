@@ -216,3 +216,18 @@
 .ci .ci-ai-symbol:hover,.ci .ci-ai-symbol[aria-expanded=true]{color:#d4c1ec;background:transparent}
 .ci .ci-ai-note{position:absolute;top:calc(100% + 4px);right:0;z-index:60;display:block;width:min(255px,74vw);padding:12px 14px;border:1px solid #51445f;border-radius:5px;background:#151321;color:#e1d7ed;box-shadow:0 8px 24px #0008;font:13px/1.6 Arial,sans-serif;letter-spacing:0;text-transform:none;white-space:normal;text-align:left}
 @media(max-width:679px){.ci .ci-ai-symbol{width:40px;height:40px}.ci .ci-lived-context{padding:0 8px}.ci .ci-lived-question{font-size:14px}}
+
+/* The timeline age is part of the opening titles, not a standalone form. */
+.ci .ci-timeline-age{margin:clamp(24px,5vw,54px) 0 0;position:relative;text-align:left}
+.ci .ci-timeline-age-trigger,.ci .ci-timeline-age-line{display:inline-flex;gap:14px;align-items:baseline;justify-content:flex-start;max-width:100%;margin:0;padding:0;border:0;background:none;box-shadow:none;line-height:1.2;text-transform:none;letter-spacing:0;color:#bcb0cb;font-family:Georgia,serif}
+.ci .ci-timeline-age-trigger{cursor:pointer;font-size:clamp(19px,3vw,25px);min-height:44px}
+.ci .ci-timeline-age-trigger strong,.ci .ci-timeline-age-line input{font-family:Georgia,serif;font-weight:400;font-size:clamp(42px,7vw,64px);line-height:1.1;color:#e5d6f3;font-variant-numeric:lining-nums}
+.ci .ci-timeline-age-line label{font-family:Georgia,serif;font-size:clamp(19px,3vw,25px);color:#bcb0cb}
+.ci .ci-timeline-age-line input{box-sizing:content-box;width:3ch;max-width:100%;padding:0 2px 4px;margin:0;border:0;border-bottom:1px solid #9c87bd;border-radius:0;outline:0;background:transparent;box-shadow:none;text-align:left;caret-color:#e5d6f3}
+.ci .ci-timeline-age-trigger:hover,.ci .ci-timeline-age-trigger:focus-visible{color:#f0e8f3;background:none;box-shadow:none}
+.ci .ci-timeline-age-trigger:focus-visible{outline:1px solid #bca9dc;outline-offset:5px}
+.ci .ci-timeline-age-question{font-style:italic;text-decoration:underline;text-decoration-color:#7c6b96;text-underline-offset:5px;text-decoration-thickness:1px}
+.ci .ci-timeline-age-hint{display:block;color:#ada0bf;font:italic 15px/1.5 Georgia,serif;margin:6px 0 0}
+.ci .ci-lived-context{margin:12px auto 0}
+.ci .ci-lived-question{color:#c3b3d2;font-size:clamp(16px,2vw,20px);text-decoration:underline;text-decoration-color:#6e607f;text-decoration-thickness:1px;text-underline-offset:4px}
+@media(max-width:679px){.ci .ci-timeline-age{margin:27px 0 0}.ci .ci-timeline-age-trigger,.ci .ci-timeline-age-line{gap:10px}.ci .ci-timeline-age-line input,.ci .ci-timeline-age-trigger strong{font-size:48px}.ci .ci-lived-question{font-size:16px}}

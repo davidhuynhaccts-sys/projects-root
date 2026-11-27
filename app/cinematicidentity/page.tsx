@@ -161,10 +161,19 @@ function timelineSuggestions(profile:Demographics|null,library:Film[]){
  for(const film of library){const placement=discoveryPlacement(film,birth,profile,now);if(!placement)continue;const chapter=chapters.findIndex(ch=>placement.year>=ch.from&&placement.year<=ch.to);if(chapter>=0)result.push({film,...placement,chapter,later:placement.year>film.year+1})}
  return result;
 }
+// The opening titles contain a quiet, inline age annotation rather than a form.
+function TimelineAge({profile,onAge}:{profile:Demographics|null;onAge:(age:string)=>void}){
+ const age=ageAt(profile),[editing,setEditing]=useState(false),[draft,setDraft]=useState("");const input=useRef<HTMLInputElement>(null),cancel=useRef(false);
+ const valid=/^\d{1,3}$/.test(draft)&&Number(draft)<=125;
+ const begin=()=>{cancel.current=false;setDraft(age===null?"":String(age));setEditing(true)};
+ useEffect(()=>{if(editing){input.current?.focus();input.current?.select()}},[editing]);
+ const finish=()=>{if(!cancel.current&&valid&&Number(draft)!==age)onAge(String(Number(draft)));setEditing(false);cancel.current=false};
+ return <div className="ci-timeline-age">{editing?<form className="ci-timeline-age-line" onSubmit={e=>{e.preventDefault();if(valid)input.current?.blur()}}><label htmlFor="ci-timeline-age-input">Age</label><input ref={input} id="ci-timeline-age-input" type="text" inputMode="numeric" autoComplete="off" enterKeyHint="done" maxLength={3} value={draft} placeholder="—" onChange={e=>setDraft(e.target.value.replace(/\D/g,""))} onBlur={finish} onKeyDown={e=>{if(e.key==="Escape"){cancel.current=true;e.currentTarget.blur()}}}/></form>:<button className="ci-timeline-age-trigger" type="button" onClick={begin} aria-label={age===null?"Add your age":"Edit your age, "+age}>{age===null?<span className="ci-timeline-age-question">How old are you?</span>:<><span>Age</span><strong>{age}</strong></>}</button>}{age===null&&!editing&&<span className="ci-timeline-age-hint">To place cinema within your lifetime.</span>}{editing&&draft&&!valid&&<span className="ci-timeline-age-hint" role="status">Enter an age from 0 to 125.</span>}</div>
+}
 function LifeTimeline({profile,history,entries,library,placements,onPlace,onExplore,onBack,onContext,onAge,livedContext,onLivedContext}:{profile:Demographics|null;history:Demographics[];entries:Entry[];library:Film[];placements:TimelinePlacement;onPlace:(id:string,year:number|null,hidden?:boolean)=>void;onExplore:(film?:Film)=>void;onBack:()=>void;onContext:()=>void;onAge:(age:string)=>void;livedContext:LivedContext;onLivedContext:(text:string,chapter:ReturnType<typeof lifeChapters>[number])=>void}){
  const chapters=lifeChapters(profile),base=chapters[0]?.from,items=deriveTimeline(profile,history,entries,library,placements),suggestions=timelineSuggestions(profile,library);
  const [active,setActive]=useState(-1),[edit,setEdit]=useState<string|null>(null),[yearInput,setYearInput]=useState(""),[showAll,setShowAll]=useState<Record<number,boolean>>({});
- const [ageInput,setAgeInput]=useState("");const [editingAge,setEditingAge]=useState(false);const root=useRef<HTMLDivElement>(null);
+ const root=useRef<HTMLDivElement>(null);
  useEffect(()=>{
   const el=root.current;if(!el)return;let raf=0,last=-2;
   const motion=window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -192,8 +201,7 @@ inner.dataset.entryVisible=opacity>.16?"yes":"no";
  </div></div></div></article>};
  const chapter=active>=0?chapters[active]:null;
  return <section className="ci-cinema-timeline" ref={root}>
- <div className="ci-cinema-hero"><div className="ci-cinema-nebula"><NeuralField animate={true}/></div><div className="ci-cinema-title">{!cinematicUX("timeline")&&<div className="ci-eyebrow"><span/> CINEMATIC IDENTITY THROUGH TIME</div>}<h1>A Life<br/><em>in Cinema.</em></h1>{!cinematicUX("timeline")&&<p>The years that shaped you.<br/>The cinema you discovered along the way.</p>}</div></div>
- {(!chapters.length||editingAge)&&<div className="ci-time-empty"><p>Share your age to place cinema within the chapters of your life. Your memories will be preserved.</p><form onSubmit={e=>{e.preventDefault();if(ageInput.trim()&&Number.isInteger(Number(ageInput))&&Number(ageInput)>=0&&Number(ageInput)<=125){onAge(ageInput);setEditingAge(false)}}}><label>Age in years <input type="number" min="0" max="125" step="1" required value={ageInput} onChange={e=>setAgeInput(e.target.value)} placeholder="Age"/></label><button className="ci-orbit-cta" type="submit">Update timeline</button>{editingAge&&<button className="ci-link" type="button" onClick={()=>setEditingAge(false)}>Cancel</button>}</form></div>}{!!chapters.length&&!editingAge&&<div style={{textAlign:"center",padding:"10px"}}><button className="ci-link" type="button" onClick={()=>{setAgeInput(String(ageAt(profile)??""));setEditingAge(true)}}>Edit age</button></div>}
+ <div className="ci-cinema-hero"><div className="ci-cinema-nebula"><NeuralField animate={true}/></div><div className="ci-cinema-title">{!cinematicUX("timeline")&&<div className="ci-eyebrow"><span/> CINEMATIC IDENTITY THROUGH TIME</div>}<h1>A Life<br/><em>in Cinema.</em></h1>{!cinematicUX("timeline")&&<p>The years that shaped you.<br/>The cinema you discovered along the way.</p>}<TimelineAge profile={profile} onAge={onAge}/></div></div>
  <div className="ci-cinema-chapterbar"><div><i style={{background:active>=0?spectrum[active%spectrum.length]:"#b9a5ed"}}/><span>{chapter?chapter.name:"A life unfolding"}</span></div><small>{chapter?chapter.from+" – "+chapter.to:""}</small></div>
  <div className="ci-cinema-track">{chapters.map((ch,i)=>{
   const personal=items.filter(x=>x.year!==null&&x.year>=ch.from&&x.year<=ch.to);
@@ -323,7 +331,7 @@ function LivedContextField({record,chapter,onSave}:{record?:LivedContextRecord;c
  useEffect(()=>{if(editing){input.current?.focus();input.current?.setSelectionRange(input.current.value.length,input.current.value.length)}},[editing]);
  const begin=()=>{cancel.current=false;setDraft(record?.current.text||"");setEditing(true)};
  const finish=()=>{if(!cancel.current)onSave(draft,chapter);setEditing(false);cancel.current=false};
- return <div className="ci-lived-context"><div className="ci-lived-line"><button type="button" className="ci-lived-question" aria-expanded={editing} onClick={()=>{if(editing){input.current?.focus()}else begin()}}>{livedQuestion}</button><AIRoadmap note={aiRoadmap.culture}/></div>{editing?<textarea ref={input} className="ci-lived-editor" aria-label={livedQuestion} rows={2} value={draft} placeholder="In your own words…" onChange={e=>setDraft(e.target.value)} onBlur={finish} onKeyDown={e=>{if(e.key==="Escape"){cancel.current=true;e.currentTarget.blur()}else if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();e.currentTarget.blur()}}}/>:record?.current.text.trim()?<button type="button" className="ci-lived-answer" onClick={begin} aria-label="Edit lived context">{record.current.text}</button>:null}</div>
+ return <div className="ci-lived-context" data-lived-context="chapter"><div className="ci-lived-line"><button type="button" className="ci-lived-question" aria-expanded={editing} onClick={()=>{if(editing){input.current?.focus()}else begin()}}>{livedQuestion}</button><AIRoadmap note={aiRoadmap.culture}/></div>{editing?<textarea ref={input} className="ci-lived-editor" aria-label={livedQuestion} rows={2} value={draft} placeholder="In your own words…" onChange={e=>setDraft(e.target.value)} onBlur={finish} onKeyDown={e=>{if(e.key==="Escape"){cancel.current=true;e.currentTarget.blur()}else if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();e.currentTarget.blur()}}}/>:record?.current.text.trim()?<button type="button" className="ci-lived-answer" onClick={begin} aria-label="Edit lived context">{record.current.text}</button>:null}</div>
 }
 
 
