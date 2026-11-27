@@ -1,0 +1,23 @@
+{
+  "name": "Cinematic Identity",
+  "short_name": "Cinematic ID",
+  "start_url": "/cinematicidentity",
+  "scope": "/cinematicidentity",
+  "display": "standalone",
+  "background_color": "#090b17",
+  "theme_color": "#090b17",
+  "icons": [
+    {
+      "src": "/cinematicidentity/app-icon?size=512",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/cinematicidentity/app-icon?size=180",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
