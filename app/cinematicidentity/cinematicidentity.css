@@ -201,3 +201,18 @@
  .ci .ci-cinema-chapter{padding-top:38px;padding-bottom:18px}
  .ci .ci-cinema-chapter-heading{margin-bottom:20px}
 }
+
+/* Lived Context: an annotation, never a permanent form. Roadmap disclosures are click-only. */
+.ci .ci-lived-context{max-width:620px;margin:8px auto 0;text-align:center}
+.ci .ci-lived-line{display:flex;justify-content:center;align-items:center;gap:3px;flex-wrap:nowrap}
+.ci .ci-lived-question,.ci .ci-lived-answer{border:0;background:transparent;box-shadow:none;padding:4px 0;cursor:pointer;font-family:Georgia,serif;font-style:italic;line-height:1.6;letter-spacing:0;text-transform:none;white-space:pre-wrap;overflow-wrap:anywhere;text-align:center;max-width:100%;color:#b2a6c1;font-size:clamp(14px,1.6vw,17px)}
+.ci .ci-lived-question{text-decoration:none;color:#a69bb5}
+.ci .ci-lived-question:hover,.ci .ci-lived-answer:hover{color:#e0d4ef}
+.ci .ci-lived-question:focus-visible,.ci .ci-lived-answer:focus-visible,.ci .ci-ai-symbol:focus-visible{outline:1px solid #bca9dc;outline-offset:3px}
+.ci .ci-lived-answer{display:block;width:100%;font-size:clamp(16px,1.9vw,21px);color:#dfd5e9;padding:2px 10px 6px}
+.ci textarea.ci-lived-editor{display:block;width:100%;margin:5px auto 0;padding:8px 4px;border:0;border-bottom:1px solid #746684;border-radius:0;background:transparent;color:#dfd5e9;font-family:Georgia,serif;font-size:17px;font-style:italic;text-align:center;line-height:1.6;box-shadow:none;min-height:70px;resize:vertical}
+.ci .ci-ai-roadmap{position:relative;display:inline-flex;vertical-align:middle;align-items:center;justify-content:center;font-style:normal;font-weight:400;letter-spacing:normal;line-height:1;flex-shrink:0}
+.ci .ci-ai-symbol{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:0;border-radius:50%;padding:0;background:transparent;box-shadow:none;color:#9a8caf;cursor:pointer}
+.ci .ci-ai-symbol:hover,.ci .ci-ai-symbol[aria-expanded=true]{color:#d4c1ec;background:transparent}
+.ci .ci-ai-note{position:absolute;top:calc(100% + 4px);right:0;z-index:60;display:block;width:min(255px,74vw);padding:12px 14px;border:1px solid #51445f;border-radius:5px;background:#151321;color:#e1d7ed;box-shadow:0 8px 24px #0008;font:13px/1.6 Arial,sans-serif;letter-spacing:0;text-transform:none;white-space:normal;text-align:left}
+@media(max-width:679px){.ci .ci-ai-symbol{width:40px;height:40px}.ci .ci-lived-context{padding:0 8px}.ci .ci-lived-question{font-size:14px}}
